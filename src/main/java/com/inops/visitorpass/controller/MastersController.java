@@ -1,26 +1,39 @@
 package com.inops.visitorpass.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AjaxBehaviorEvent;
+import javax.faces.model.SelectItem;
 
 import org.primefaces.PrimeFaces;
+import org.primefaces.event.TransferEvent;
+import org.primefaces.model.DualListModel;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.inops.visitorpass.domain.Kvp;
 import com.inops.visitorpass.entity.Cadre;
 import com.inops.visitorpass.entity.Department;
 import com.inops.visitorpass.entity.Designation;
 import com.inops.visitorpass.entity.Division;
+import com.inops.visitorpass.entity.EMail;
+import com.inops.visitorpass.entity.EmailTemplate;
+import com.inops.visitorpass.entity.EmailTemplateAssociation;
 import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.Shift;
 import com.inops.visitorpass.service.ICadre;
 import com.inops.visitorpass.service.IDepartment;
 import com.inops.visitorpass.service.IDesignation;
 import com.inops.visitorpass.service.IDivision;
+import com.inops.visitorpass.service.IEmail;
+import com.inops.visitorpass.service.IEmailTemplate;
 import com.inops.visitorpass.service.IEmployee;
 import com.inops.visitorpass.service.IShift;
 
@@ -37,12 +50,15 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class MastersController {
 
+	private final ApplicationContext ctx;
 	private final IDivision division;
 	private final IDepartment departmentService;
 	private final IDesignation designationService;
 	private final ICadre cadreService;
 	private final IShift shiftService;
 	private final IEmployee employeeService;
+	private final IEmail emailService;
+	private final IEmailTemplate emailTemplateService;
 
 	private Division selectedDivision;
 	private List<Division> selectedDivisions;
@@ -69,6 +85,14 @@ public class MastersController {
 	private List<Employee> selectedEmployees;
 	private List<Employee> employees;
 
+	private EMail selectedEmail;
+
+	private EmailTemplate selectedEmailTemplate;
+	private List<EmailTemplate> selectedEmailTemplates;
+	private List<EmailTemplate> emailTemplates;
+
+	private DualListModel<Kvp> pickSelectedTypes;
+
 	@PostConstruct
 	public void init() {
 
@@ -77,7 +101,21 @@ public class MastersController {
 		designations = designationService.findAll().get();
 		cadres = cadreService.findAll().get();
 		shifts = shiftService.findAll().get();
-		employees = employeeService.findAll().get();
+		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
+		if (!emailService.findAll().get().isEmpty())
+			selectedEmail = emailService.findAll().get().get(0);
+
+		emailTemplates = emailTemplateService.findAll().get();
+
+		emailTemplates.forEach(association -> {
+			association.getPickSelectedTypes().setTarget(association.getAssociations().stream()
+					.map(asso -> new Kvp(asso.getCode(), asso.getName())).collect(Collectors.toList()));
+		});
+
+		List<Kvp> pickSource = new ArrayList<>();
+		List<Kvp> pickTarget = new ArrayList<>();
+		pickSelectedTypes = new DualListModel<>(pickSource, pickTarget);
+
 	}
 
 	public void openNew() {
@@ -87,6 +125,7 @@ public class MastersController {
 		this.selectedCadre = new Cadre();
 		this.selectedShift = new Shift();
 		this.selectedEmployee = new Employee();
+		this.selectedEmailTemplate = new EmailTemplate();
 	}
 
 	public void saveDivision() {
@@ -454,6 +493,99 @@ public class MastersController {
 
 	public boolean hasSelectedEmployees() {
 		return this.selectedEmployees != null && !this.selectedEmployees.isEmpty();
+	}
+
+	public void saveEmail() {
+		try {
+			selectedEmail = emailService.save(selectedEmail);
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Email Added successfully");
+
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void setComp(AjaxBehaviorEvent event) {
+		List<Kvp> pickSource = new ArrayList<>();
+		List<Kvp> pickTarget = new ArrayList<>();
+
+		if (selectedEmailTemplate.getSelectionType().equals("Departments")) {
+			pickSource = departmentService.findAll().get().stream().map(dept -> {
+				return new Kvp(dept.getId(), dept.getDepartmentName());
+			}).collect(Collectors.toList());
+		} else if (selectedEmailTemplate.getSelectionType().equals("Employees")) {
+			pickSource = employees.stream().map(emp -> {
+				return new Kvp(emp.getEmployeeId(), emp.getEmployeeName());
+			}).collect(Collectors.toList());
+		} else if (selectedEmailTemplate.getSelectionType().equals("Caders")) {
+			pickSource = cadreService.findAll().get().stream().map(cad -> {
+				return new Kvp(cad.getCadreId(), cad.getCadre());
+			}).collect(Collectors.toList());
+		}
+
+		selectedEmailTemplate.getPickSelectedTypes().setSource(pickSource);
+	}
+
+	public void saveTemplate() {
+		try {
+			selectedEmailTemplate.setAssociations(selectedEmailTemplate.getPickSelectedTypes().getTarget().stream()
+					.map(kvp -> new EmailTemplateAssociation(0l, kvp.getKey(), kvp.getValue(), selectedEmailTemplate))
+					.collect(Collectors.toList()));
+			emailTemplateService.save(selectedEmailTemplate);
+			this.emailTemplates.add(selectedEmailTemplate);
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "EmailTemplate Added successfully");
+
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void deleteTemplate() {
+
+		emailTemplateService.delete(selectedEmailTemplate);
+		this.emailTemplates.remove(this.selectedEmailTemplate);
+		if (this.selectedEmailTemplates != null) {
+			this.selectedEmailTemplates.remove(this.selectedEmailTemplate);
+		}
+		this.selectedEmailTemplate = null;
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "EmailTemplate deleted successfully");
+	}
+
+	public void deleteEmailTemplates() {
+		emailTemplateService.deleteAll(this.selectedEmailTemplates);
+		this.emailTemplates.removeAll(this.selectedEmailTemplates);
+		this.selectedEmailTemplates = null;
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "EmailTemplate deleted successfully");
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");
+	}
+
+	public String getDeleteEmailTemplatesButtonMessage() {
+		if (hasSelectedEmailTemplates()) {
+			int size = this.selectedEmailTemplates.size();
+			return size > 1 ? size + " EmailTemplates selected" : "1 EmailTemplate selected";
+		}
+
+		return "Delete";
+	}
+
+	public void onTransfer(TransferEvent event) {
+		StringBuilder builder = new StringBuilder();
+		for (Object item : event.getItems()) {
+			builder.append(((Kvp) item).getValue()).append("<br />");
+		}
+
+		FacesMessage msg = new FacesMessage();
+		msg.setSeverity(FacesMessage.SEVERITY_INFO);
+		msg.setSummary("Items Transferred");
+		msg.setDetail(builder.toString());
+
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public boolean hasSelectedEmailTemplates() {
+		return this.selectedEmailTemplates != null && !this.selectedEmailTemplates.isEmpty();
 	}
 
 	public void addMessage(FacesMessage.Severity severity, String summary, String detail) {

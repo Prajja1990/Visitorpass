@@ -1,5 +1,6 @@
 package com.inops.visitorpass.controller;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,6 +18,7 @@ import java.util.stream.LongStream;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Named;
 
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.FileUploadEvent;
@@ -62,14 +64,17 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import javax.enterprise.context.RequestScoped;
 
 @Getter
 @Setter
 @Log4j2
+@Named
+@RequestScoped
 @Component("leaveTypeController")
 @Scope("session")
 @RequiredArgsConstructor
-public class LeaveTypeController {
+public class LeaveTypeController implements Serializable{
 
 	@Autowired
 	ApplicationContext ctx;

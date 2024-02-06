@@ -43,7 +43,7 @@ public class ScheduledTaskManager implements IScheduled {
 					Log.info(Thread.currentThread().getName() + " The Task1 executed at " + now + " and task "
 							+ task.getTaskName());
 					IJob job = jobService.getJob(task.getTaskType());
-					job.execute(now, now);
+					job.execute(now, now , task);
 					task.setLastActualExecutionTime(now);
 					task.setLastCompletionTime(now);
 					task.setLastScheduledExecutionTime(now);

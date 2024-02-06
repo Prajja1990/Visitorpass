@@ -1,0 +1,245 @@
+<ui:composition
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:h="http://xmlns.jcp.org/jsf/html"
+  xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  template="/WEB-INF/template.xhtml"
+>
+  <ui:define name="title">
+    Report Scheduler <span class="subitem"> configuration</span>
+  </ui:define>
+
+  <ui:define name="description">
+    Tool provides an Outlook for endusers who is pertinant to operate the
+    Report Scheduler genereation request process.
+  </ui:define>
+
+  <ui:param name="documentationLink" value="/components/schedule" />
+  <ui:param name="widgetLink" value="Schedule-1" />
+
+  <ui:define name="implementation">
+    <h:form id="form">
+      <p:growl id="messages" showDetail="true" />
+
+      <div class="card crud-demo">
+        <h5>Report Scheduler Details</h5>
+        <p:toolbar>
+          <p:toolbarGroup>
+            <p:commandButton value="New" icon="pi pi-plus" actionListener="#{jobSchedulerController.openNew}"
+            update=":dialogs:manage-product-content" oncomplete="PF('manageProductDialog').show()"
+            styleClass="ui-button-success" style="margin-right: .5rem">
+            <p:resetInput target=":dialogs:manage-product-content" />
+        </p:commandButton>
+        <p:commandButton id="delete-products-button" value="#{jobSchedulerController.deleteScheduledTasksButtonMessage}"
+            icon="pi pi-trash" actionListener="#{jobSchedulerController.deleteScheduledTasks}"
+            styleClass="ui-button-danger" disabled="#{!jobSchedulerController.hasSelectedScheduledTasks()}" update="@this">
+            <p:confirm header="Confirmation" message="Delete the selected schedulers?"
+                icon="pi pi-exclamation-triangle" />
+        </p:commandButton>
+          </p:toolbarGroup>
+          <p:toolbarGroup align="right">
+              <p:fileUpload mode="simple" skinSimple="true" label="Import" chooseIcon="pi pi-download" />
+              <p:commandButton value="Export" icon="pi pi-upload" styleClass="ui-button-help" ajax="false">
+                  <p:dataExporter type="pdf" target="dt-products" fileName="products" />
+              </p:commandButton>
+          </p:toolbarGroup>
+      </p:toolbar>
+
+      <p:dataTable id="dt-products" widgetVar="dtProducts" var="product" value="#{jobSchedulerController.scheduledTasksReport}"
+          reflow="true" styleClass="products-table" selection="#{jobSchedulerController.selectedScheduledTasks}"
+          rowKey="#{product.id}" paginator="true" rows="10" rowSelectMode="add" paginatorPosition="bottom">
+          <f:facet name="header">
+              <div class="products-table-header">
+                  <span style="font-weight: bold">Scheduler view</span>
+                  <span class="filter-container ui-input-icon-left"> <i class="pi pi-search"></i>
+                      <p:inputText id="globalFilter" onkeyup="PF('dtProducts').filter()" placeholder="Search" />
+                  </span>
+              </div>
+          </f:facet>
+
+          <p:ajax event="rowSelect" update=":form:delete-products-button" />
+          <p:ajax event="rowUnselect" update=":form:delete-products-button" />
+          <p:ajax event="rowSelectCheckbox" update=":form:delete-products-button" />
+          <p:ajax event="rowUnselectCheckbox" update=":form:delete-products-button" />
+          <p:ajax event="toggleSelect" update=":form:delete-products-button" />
+
+          <p:column selectionMode="multiple" exportable="false"></p:column>
+
+          <p:column headerText="Code" sortBy="#{product.id}" filterBy="#{product.id}">
+              <h:outputText value="#{product.id}" />
+          </p:column>
+          <p:column headerText="Schedule Name" sortBy="#{product.taskName}" filterBy="#{product.taskName}">
+              <h:outputText value="#{product.taskName}" />
+          </p:column>
+
+          <p:column headerText="Schedule Type" sortBy="#{product.taskType}" filterBy="#{product.taskType}">
+              <h:outputText value="#{product.taskType}" />
+          </p:column>
+         
+          <p:column headerText="Time to Schedule" sortBy="#{product.cronExpression}">
+            <h:outputText value="#{product.cronExpression}" />
+          </p:column>
+
+          <p:column headerText="Status" sortBy="#{product.active}" filterBy="#{product.active}">
+              <h:outputText value="#{product.active}" />
+          </p:column>
+          
+          <p:column headerText="Last Completion Time" sortBy="#{product.lastCompletionTime}" filterBy="#{product.lastCompletionTime}">
+              <h:outputText value="#{product.lastCompletionTime}" />
+          </p:column>          
+         
+          <p:column exportable="false">           
+
+              <p:commandButton icon="pi pi-pencil" update=":dialogs:manage-product-content"
+                  oncomplete="PF('manageProductDialog').show()"
+                  styleClass="edit-button rounded-button ui-button-success" process="@this">
+                  <f:setPropertyActionListener value="#{product}" target="#{jobSchedulerController.selectedScheduledTask}" />
+                  <p:resetInput target=":dialogs:manage-product-content" />
+              </p:commandButton>
+              <p:commandButton class="ui-button-warning rounded-button" icon="pi pi-trash"
+                               process="@this"
+                               oncomplete="PF('deleteProductDialog').show()">
+                  <f:setPropertyActionListener value="#{product}" target="#{jobSchedulerController.selectedScheduledTask}" />
+              </p:commandButton>
+          </p:column>
+
+      </p:dataTable>
+    </div>
+  </h:form>
+
+  <h:form id="dialogs">
+   
+        <p:dialog header="Report Scheduler  Details" showEffect="fade" modal="true" widgetVar="manageProductDialog"
+            responsive="true">
+            <p:outputPanel id="manage-product-content" class="ui-fluid">
+                <p:outputPanel rendered="#{not empty jobSchedulerController.selectedScheduledTask}">                  
+                    <div class="field">
+                        <p:outputLabel for="name">Job Name</p:outputLabel>
+                        <p:inputText id="name" value="#{jobSchedulerController.selectedScheduledTask.taskName}" required="true" />
+                    </div>
+               
+                    <div class="field">
+                      <p:outputLabel for="reports">Report Type</p:outputLabel>                    
+                      <p:selectCheckboxMenu id="reports" 
+                      filter="true" filterMatchMode="startsWith"
+                      label="reports" multiple="true" emptyLabel="Please select..." updateLabel="true"
+                      style="min-width: 15rem" panelStyle="width: 30rem" scrollHeight="250"
+                      value="#{jobSchedulerController.selectedReports}">
+                       
+                        <f:selectItems value="#{jobSchedulerController.reportTypes}"/>
+                    </p:selectCheckboxMenu>
+                  </div>         
+                  <div class="field">
+                    <p:outputLabel for="template">Mail Template :</p:outputLabel>
+                    <p:selectOneMenu value="#{jobSchedulerController.selectedScheduledTask.reportTask.templateId}" id="template" 
+                    autoWidth="false" editable="false" maxlength="10"
+                    filter="true" filterMatchMode="startsWith">                   
+                    <f:selectItem itemLabel="select template" itemValue="" />
+                    <f:selectItems value="#{jobSchedulerController.emailTemplates}" var="player"
+                        itemLabel="#{player.templateName}" itemValue="#{player.templateId}" />                       
+                </p:selectOneMenu>
+
+                </div>                        
+                <div class="formgrid grid">
+                    <div class="field">
+                        <p:outputLabel for="fromDay">From Day</p:outputLabel>     
+                        <p:spinner id="fromDay" value="#{jobSchedulerController.selectedScheduledTask.reportTask.fromDay}" buttons="horizontal-after" min="-31" max="31"
+                        upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
+                      </div>
+                      <div class="field">
+                        <p:outputLabel for="toDay">to Day</p:outputLabel>     
+                        <p:spinner id="toDay" value="#{jobSchedulerController.selectedScheduledTask.reportTask.toDay}" buttons="horizontal-after" min="-31" max="31"
+                        upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
+                      </div>
+                </div>
+                    <div class="formgrid grid">
+                      <div class="field">
+                        <p:outputLabel for="everyMinutes">Schedule Minutes for</p:outputLabel>     
+                        <p:selectOneMenu id="everyMinutes" value="#{jobSchedulerController.selectedScheduledTask.everyMinutes}">
+                          <f:selectItem itemLabel="Specific" itemValue=""/>
+                          <f:selectItem itemLabel="Every" itemValue="*/"/>                                                            
+                      </p:selectOneMenu>
+                      </div>
+                      <div class="field">
+                        <p:outputLabel for="minutes">Minutes to Schedule</p:outputLabel>     
+                        <p:spinner id="minutes" value="#{jobSchedulerController.selectedScheduledTask.minutes}" buttons="vertical" min="0" max="60"
+                        upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
+                      </div>
+  
+                      <div class="field">
+                        <p:outputLabel for="hours">Hours to Schedule</p:outputLabel>     
+                        <p:spinner id="hours" value="#{jobSchedulerController.selectedScheduledTask.hours}" buttons="vertical" min="0" max="24"
+                        upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
+                      </div>
+  
+                      <div class="field">
+                        <p:outputLabel for="dayOfMonth">Day of the month to Schedule</p:outputLabel>     
+                        <p:spinner id="dayOfMonth" value="#{jobSchedulerController.selectedScheduledTask.dayOfMonth}" buttons="vertical" min="0" max="31"
+                        upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
+                      </div>
+  
+                      <div class="field">
+                        <p:outputLabel for="month">Month to Schedule</p:outputLabel>     
+                        <p:selectOneMenu id="month" value="#{jobSchedulerController.selectedScheduledTask.month}">
+                          <f:selectItem itemLabel="Every" itemValue="*"/>
+                          <f:selectItem itemLabel="quarterly" itemValue="1/3"/>
+                          <f:selectItem itemLabel="half-yearly" itemValue="1/6"/>
+                          <f:selectItem itemLabel="once a year" itemValue="1"/>                                              
+                      </p:selectOneMenu>
+                      </div>
+  
+                      <div class="field">
+                        <p:outputLabel for="dayOfWeek">Day of the week to Schedule</p:outputLabel>     
+                        <p:selectOneMenu id="dayOfWeek" value="#{jobSchedulerController.selectedScheduledTask.dayOfWeek}">
+                          <f:selectItem itemLabel="Every" itemValue="?"/>
+                          <f:selectItem itemLabel="MON" itemValue="MON"/>
+                          <f:selectItem itemLabel="TUE" itemValue="TUE"/>
+                          <f:selectItem itemLabel="WED" itemValue="WED"/>
+                          <f:selectItem itemLabel="THU" itemValue="THU"/> 
+                          <f:selectItem itemLabel="FRI" itemValue="FRI"/> 
+                          <f:selectItem itemLabel="SAT" itemValue="SAT"/> 
+                          <f:selectItem itemLabel="SUN" itemValue="SUN"/>                           
+                      </p:selectOneMenu>
+                      </div>                  
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+  
+            <f:facet name="footer">
+                <p:commandButton value="Save" icon="pi pi-check" actionListener="#{jobSchedulerController.saveReportScheduledTask}"
+                 update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+  
+                 <p:commandButton value="Pause" icon="pi pi-check" actionListener="#{jobSchedulerController.pauseScheduledTask}"
+                 update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+  
+                 <p:commandButton value="Resume" icon="pi pi-check" actionListener="#{jobSchedulerController.resumeScheduledTask}"
+                 update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+  
+                 <p:commandButton value="CancelJob" icon="pi pi-check" actionListener="#{jobSchedulerController.cancelScheduledTask}"
+                 update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+  
+                <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageProductDialog').hide()"
+                    class="ui-button-secondary" type="button" />
+            </f:facet>
+        </p:dialog>
+
+      <p:confirmDialog widgetVar="deleteProductDialog" showEffect="fade" width="300"
+          message="Delete the division?" header="Confirm" severity="warn">
+          <p:commandButton value="Yes" icon="pi pi-check" actionListener="#{mastersController.deleteDivision}"
+              process="@this" update=":form:delete-products-button"
+              oncomplete="PF('deleteProductDialog').hide()" />
+          <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"
+              onclick="PF('deleteProductDialog').hide()" />
+      </p:confirmDialog>
+
+      <p:confirmDialog global="true" showEffect="fade" width="300">
+          <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+          <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"
+              icon="pi pi-times" />
+      </p:confirmDialog>      
+  
+    </h:form>
+ 
+  </ui:define>
+</ui:composition>

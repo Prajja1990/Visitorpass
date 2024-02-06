@@ -131,7 +131,7 @@ public class ReportController implements Serializable {
 				return new Kvp(dept.getId(), dept.getDepartmentName());
 			}).collect(Collectors.toList());
 		} else if (report.getSelectionType().equals("Employees")) {
-			pickSource = employeeService.findAll().get().stream().map(emp -> {
+			pickSource =getEmployees.get().stream().map(emp -> {
 				return new Kvp(emp.getEmployeeId(), emp.getEmployeeName());
 			}).collect(Collectors.toList());
 		} else if (report.getSelectionType().equals("Caders")) {

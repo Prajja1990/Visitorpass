@@ -94,7 +94,14 @@
         
               <p:outputPanel id="manage-product-content" class="ui-fluid">
                   <p:outputPanel rendered="#{not empty organigramController.selectedOrganigram}">   
-                    <div class="field">               
+            <div class="field">               
+                      <p:outputLabel for="type"></p:outputLabel>
+                      <p:selectOneButton value="#{organigramController.type}" id="type">
+                          <f:selectItem itemLabel="Employee" itemValue="emplopyee"/>
+                          <f:selectItem itemLabel="Manager" itemValue="manager"/>           
+                      </p:selectOneButton>
+            </div>
+           <div class="field">               
                     <p:outputLabel for="department">Department</p:outputLabel>
                     <p:selectOneMenu value="#{organigramController.department}" id="department" 
                           autoWidth="false" editable="false" maxlength="10"

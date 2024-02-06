@@ -137,19 +137,19 @@
                     </div>
                     <div class="field">
                       <p:outputLabel for="minutes">Minutes to Schedule</p:outputLabel>     
-                      <p:spinner id="minutes" value="#{jobSchedulerController.selectedScheduledTask.minutes}" buttons="vertical"
+                      <p:spinner id="minutes" value="#{jobSchedulerController.selectedScheduledTask.minutes}" buttons="vertical"  min="0" max="60"
                       upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                     </div>
 
                     <div class="field">
                       <p:outputLabel for="hours">Hours to Schedule</p:outputLabel>     
-                      <p:spinner id="hours" value="#{jobSchedulerController.selectedScheduledTask.hours}" buttons="vertical"
+                      <p:spinner id="hours" value="#{jobSchedulerController.selectedScheduledTask.hours}" buttons="vertical"  min="0" max="24"
                       upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                     </div>
 
                     <div class="field">
                       <p:outputLabel for="dayOfMonth">Day of the month to Schedule</p:outputLabel>     
-                      <p:spinner id="dayOfMonth" value="#{jobSchedulerController.selectedScheduledTask.dayOfMonth}" buttons="vertical"
+                      <p:spinner id="dayOfMonth" value="#{jobSchedulerController.selectedScheduledTask.dayOfMonth}" buttons="vertical"  min="0" max="31"
                       upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                     </div>
 

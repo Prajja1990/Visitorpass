@@ -18,6 +18,7 @@ import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.LeaveBalance;
 import com.inops.visitorpass.entity.LeaveBalanceHistory;
 import com.inops.visitorpass.entity.LeaveTypeEntity;
+import com.inops.visitorpass.entity.ScheduledTask;
 import com.inops.visitorpass.service.ILeaveBalance;
 import com.inops.visitorpass.service.ILeaveBalanceHistory;
 import com.inops.visitorpass.service.ILeaveType;
@@ -49,7 +50,7 @@ public class LeaveComputation implements IJob {
 	}
 
 	@Override
-	public void execute(Date from, Date to) {
+	public void execute(Date from, Date to, ScheduledTask task) {
 		employees.forEach(employee -> {
 
 			leaveTypes.forEach(leaveType -> {

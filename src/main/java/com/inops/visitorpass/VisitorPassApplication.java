@@ -2,12 +2,15 @@ package com.inops.visitorpass;
 
 import javax.faces.webapp.FacesServlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +21,8 @@ import com.inops.visitorpass.util.ViewScope;
 
 @SpringBootApplication
 @EnableAutoConfiguration
-public class VisitorPassApplication extends SpringBootServletInitializer implements ServletContextAware {
+@ServletComponentScan
+public class VisitorPassApplication extends SpringBootServletInitializer implements ServletContextInitializer,ServletContextAware {
 
 	public static void main(String[] args) {
 		SpringApplication.run(VisitorPassApplication.class, args);
@@ -68,6 +72,13 @@ public class VisitorPassApplication extends SpringBootServletInitializer impleme
 		// "com.sun.el.ExpressionFactoryImpl");
 		servletContext.setInitParameter("com.sun.faces.forceLoadConfiguration", Boolean.TRUE.toString());
 		servletContext.setInitParameter("javax.faces.FACELETS_SKIP_COMMENTS", "true");
+		servletContext.setInitParameter("primefaces.UPLOADER", "auto");
 	}
+	
+	 @Override
+	    public void onStartup(ServletContext servletContext) throws ServletException {
+	        // Perform any initialization tasks here
+	        servletContext.setInitParameter("primefaces.UPLOADER", "auto");
+	    }
 
 }

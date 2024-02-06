@@ -11,26 +11,29 @@ import lombok.RequiredArgsConstructor;
 public class JobServiceImpl implements IJobService {
 
 	private final ICompute computeService;
-	private final IJob leaveComputation;
+	private final IJob leaveComputation, reportComputation;
 
 	@Override
 	public IJob getJob(String serviceName) {
 		IJob jobService = null;
 		switch (serviceName) {
 		case "Muster":
-			jobService = (fromDate , toDate)->{
+			jobService = (fromDate, toDate, task) -> {
 				computeService.createMusterForAll(fromDate);
 			};
 			break;
-			
+
 		case "Compute":
-			jobService = (fromDate , toDate)->{
+			jobService = (fromDate, toDate, task) -> {
 				computeService.computeAll(fromDate);
 			};
 			break;
 		case "Leave":
 			return leaveComputation;
-			//break;
+		// break;
+		case "Report":
+			return reportComputation;
+		// break;
 
 		default:
 			break;

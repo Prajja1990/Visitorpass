@@ -3,6 +3,7 @@ package com.inops.visitorpass.controller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,8 +27,8 @@ import com.inops.visitorpass.entity.Department;
 import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.EmployeeNode;
 import com.inops.visitorpass.entity.Organigram;
-import com.inops.visitorpass.repository.EmployeeNodeRepository;
 import com.inops.visitorpass.service.IDepartment;
+import com.inops.visitorpass.service.IEmployeeNode;
 import com.inops.visitorpass.service.IOrganigram;
 
 import lombok.Getter;
@@ -46,7 +47,7 @@ public class OrganigramController {
 	private final ApplicationContext ctx;
 	private final IDepartment departmentService;
 	private final IOrganigram organigramService;
-	private final EmployeeNodeRepository employeeNodeRepository;
+	private final IEmployeeNode employeeNodeService;
 
 	private OrganigramNode rootNode;
 	private OrganigramNode selection;
@@ -62,40 +63,43 @@ public class OrganigramController {
 	private String reportingManaget;
 	private String[] reporties;
 
+	private String type;
 	private String employeeName;
 	private List<Employee> employees;
 	private List<Employee> selectedEmployees;
 	private List<Employee> reportiesEmployees;
 	private List<Department> departments;
 
+	private List<Organigram> organigrams;
+
 	@PostConstruct
 	public void init() {
 		departments = departmentService.findAll().get();
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
-
-		selection = new DefaultOrganigramNode(null, "Ridvan Agar", null);
-
-		rootNode = new DefaultOrganigramNode("root", "Inops", null);
-		rootNode.setCollapsible(false);
-		rootNode.setDroppable(true);
-
-		OrganigramNode softwareDevelopment = addDivision(rootNode, "Software Development", "Ridvan Agar");
-
-		OrganigramNode teamJavaEE = addDivision(softwareDevelopment, "Team JavaEE");
-		addDivision(teamJavaEE, "JSF", "Thomas Andraschko");
-		addDivision(teamJavaEE, "Backend", "Marie Louise");
-
-		OrganigramNode teamMobile = addDivision(softwareDevelopment, "Team Mobile");
-		addDivision(teamMobile, "Android", "Andy Ruby");
-		addDivision(teamMobile, "iOS", "Stevan Jobs");
-
-		addDivision(rootNode, "Managed Services", "Thorsten Schultze", "Sandra Becker");
-
-		OrganigramNode marketing = addDivision(rootNode, "Marketing");
-		addDivision(marketing, "Social Media", "Ali Mente", "Lisa Boehm");
-		addDivision(marketing, "Press", "Michael Gmeiner", "Hans Peter");
-
-		addDivision(rootNode, "Management", "Hassan El Manfalouty");
+		loadData();
+		/*
+		 * selection = new DefaultOrganigramNode(null, "Ridvan Agar", null);
+		 * 
+		 * OrganigramNode softwareDevelopment = addDivision(rootNode,
+		 * "Software Development", "Ridvan Agar");
+		 * 
+		 * OrganigramNode teamJavaEE = addDivision(softwareDevelopment, "Team JavaEE");
+		 * addDivision(teamJavaEE, "JSF", "Thomas Andraschko"); addDivision(teamJavaEE,
+		 * "Backend", "Marie Louise");
+		 * 
+		 * OrganigramNode teamMobile = addDivision(softwareDevelopment, "Team Mobile");
+		 * addDivision(teamMobile, "Android", "Andy Ruby"); addDivision(teamMobile,
+		 * "iOS", "Stevan Jobs");
+		 * 
+		 * addDivision(rootNode, "Managed Services", "Thorsten Schultze",
+		 * "Sandra Becker");
+		 * 
+		 * OrganigramNode marketing = addDivision(rootNode, "Marketing");
+		 * addDivision(marketing, "Social Media", "Ali Mente", "Lisa Boehm");
+		 * addDivision(marketing, "Press", "Michael Gmeiner", "Hans Peter");
+		 * 
+		 * addDivision(rootNode, "Management", "Hassan El Manfalouty");
+		 */
 	}
 
 	public void openNew() {
@@ -125,21 +129,68 @@ public class OrganigramController {
 		Employee manager = selectedEmployees.stream().filter(emp -> emp.getEmployeeId().equals(reportingManaget))
 				.findAny().orElse(null);
 		Organigram parent = new Organigram(0l, manager, "Manager", department, employeeNodes);
-		
-		organigramService.save(parent);
-		
+
+		Organigram parentSaved = organigramService.save(parent);
+
 		employeeNodes = reportiesEmployees.stream()
 				.filter(employ -> Arrays.asList(reporties).contains(employ.getEmployeeId()))
 				.collect(Collectors.toList()).stream()
-				.map(employee -> new EmployeeNode(0l, employee, "Reporter", department, parent))
+				.map(employee -> new EmployeeNode(0l, employee, "Reporter", department, parentSaved))
 				.collect(Collectors.toList());
-		parent.getEmployeeNodes().addAll(employeeNodes);
-		
-		
+		parentSaved.setEmployeeNodes(employeeNodes);
 
+		organigramService.save(parentSaved);
+		loadData();
 		PrimeFaces.current().executeScript("PF('manageProductDialog').hide()");
 		PrimeFaces.current().ajax().update(":form:organigram", ":form:messages");
 
+	}
+
+	private void loadData() {
+		rootNode = new DefaultOrganigramNode("root", "Inops", null);
+		rootNode.setCollapsible(false);
+		rootNode.setDroppable(true);
+
+		List<EmployeeNode> employeeNodes = employeeNodeService.findAll().get();
+		organigrams = organigramService.findAll().get();
+		
+		  Map<String, List<EmployeeNode> > nodesByDepartment = employeeNodes.stream()
+	                .collect(Collectors.groupingBy(EmployeeNode::getDepartment));
+		  
+		  nodesByDepartment.forEach((k,v)->{
+			  Map<Organigram, List<EmployeeNode> > nodesByManager =	  v.stream()
+              .collect(Collectors.groupingBy(EmployeeNode::getOrganigramChild));
+			  
+		  });
+			/*
+			 * departments.forEach(dep -> {
+			 * 
+			 * OrganigramNode development = addDivision(rootNode, dep.getDepartmentName());
+			 * 
+			 * List<EmployeeNode> nodes = employeeNodes.stream() .filter(node ->
+			 * node.getDepartment().equals(dep.getDepartmentName())).collect(Collectors.
+			 * toList());
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * List<Organigram> orgsManager = organigrams.stream().filter(org ->
+			 * org.getDepartment().equals(dep.getId())) .collect(Collectors.toList());
+			 * 
+			 * // OrganigramNode m = addDivision(development, );
+			 * 
+			 * });
+			 */
+
+		organigrams.forEach(org -> {
+
+			OrganigramNode development = addDivision(rootNode, org.getDepartment());
+
+			addDivision(development, org.getParentEmployee().getEmployeeName(),
+					org.getEmployeeNodes().stream().map(emp -> emp.getChildEmployee().getEmployeeName())
+							.collect(Collectors.toList()).toArray(new String[0]));
+		});
 	}
 
 	protected OrganigramNode addDivision(OrganigramNode parent, String name, String... employees) {

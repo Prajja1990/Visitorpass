@@ -19,7 +19,7 @@
   <ui:param name="widgetLink" value="Schedule-1" />
 
   <ui:define name="implementation">
-    <h:form id="form">
+    <h:form id="form" >
       <p:growl id="messages" showDetail="true" />
 
       <div class="card crud-demo">
@@ -43,6 +43,11 @@
                               mode="simple" skinSimple="true" auto="true"
                               process="@this" update="messages"
                               listener="#{leaveTypeController.handleFileUpload}" />
+               <p:fileUpload listener="#{leaveTypeController.handleFileUpload}" mode="advanced" dragDropSupport="false"
+                              multiple="true" update="messages" maxChunkSize="1000000">
+                   
+                </p:fileUpload>
+              
               <p:commandButton value="Export" icon="pi pi-upload" styleClass="ui-button-help" ajax="false">
                   <p:dataExporter type="pdf" target="dt-products" fileName="products" />
               </p:commandButton>
