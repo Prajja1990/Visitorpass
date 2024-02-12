@@ -69,7 +69,7 @@ public class AppMenu {
 		RoleEntitlement roleEntitlements = user.getRoleEntitlement();
 
 		List<MenuCategoryEntity> menuCategoriesEntity = menuCategoryService.findAll().get();
-
+		menuCategoriesEntity = menuCategoriesEntity.stream().filter(menu->menu.isCustom()).collect(Collectors.toList());
 		menuCategoriesEntity.forEach(menuCategory -> {
 			menuCategory.getMenuItem().removeIf(menuItem -> !roleEntitlements.getMenuItem().stream()
 					.anyMatch(obj -> menuItem.getLabel().equals(obj.getLabel())));

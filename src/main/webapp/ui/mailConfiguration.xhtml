@@ -180,8 +180,8 @@
                 </div>     
                 <div class="field">
                     <p:outputLabel for="body">Body</p:outputLabel>                                    
-                    <p:inputTextarea  id="body" value="#{mastersController.selectedEmailTemplate.body}" rows="6" required="true" />
-                   
+                    <p:textEditor secure='false' id="body" value="#{mastersController.selectedEmailTemplate.body}"  height="200px" width="50px" widgetVar="editor1" required="true" />
+                                       
                 </div>      
                 <div class="field">
                     <p:outputLabel for="selectionType">Selection Type</p:outputLabel>                                    

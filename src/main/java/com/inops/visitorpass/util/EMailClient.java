@@ -1,6 +1,7 @@
 package com.inops.visitorpass.util;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -15,17 +16,21 @@ import org.springframework.stereotype.Service;
 
 import com.inops.visitorpass.entity.EMail;
 import com.inops.visitorpass.entity.EmailTemplate;
+import com.inops.visitorpass.entity.Employee;
+import com.inops.visitorpass.service.job.ReportComputation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.log4j.Log4j2;
 
 @Getter
 @Setter
 @Accessors(chain = true)
 @NoArgsConstructor
 //@AllArgsConstructor
+@Log4j2
 @Service("emailClient")
 public class EMailClient {
 
@@ -50,15 +55,14 @@ public class EMailClient {
 
 	}
 
-	public void sendEmailWithAttachment(EMail email, EmailTemplate template, Map<String, byte[]> attachment)
-			throws MessagingException, IOException {
+	public void sendEmailWithAttachment(EMail email, EmailTemplate template, Map<String, byte[]> attachment,
+			List<Employee> employeeEmails) throws MessagingException, IOException {
 		JavaMailSender javaMailSender = javaMailSender(email);
 
 		MimeMessage message = javaMailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
 		helper.setFrom(email.getFromAddress());
-		// helper.setTo(to);
 		helper.setSubject(template.getSubject());
 		helper.setText(template.getBody(), true);
 
@@ -72,8 +76,15 @@ public class EMailClient {
 				}
 			}
 		});
+		employeeEmails.forEach(emp -> {
+			try {
+				helper.setTo(emp.getEmail());
+				javaMailSender.send(message);
+			} catch (MessagingException e) {
+				log.error("mail send exception {}", e.getMessage());
+			}
+		});
 
-		javaMailSender.send(message);
 	}
 
 }

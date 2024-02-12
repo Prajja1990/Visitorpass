@@ -52,13 +52,17 @@ public class ReportComputation implements IJob {
 	@PostConstruct
 	public void init() {
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
-		emailTemplates = emailTemplateService.findAll().get();
-		selectedEmail = emailService.findAll().get().get(0);
+		/*
+		 * emailTemplates = emailTemplateService.findAll().get(); selectedEmail =
+		 * emailService.findAll().get().get(0);
+		 */
 	}
 
 	@Override
 	public void execute(Date from, Date to, ScheduledTask task) {
 		try {
+			emailTemplates = emailTemplateService.findAll().get();
+			selectedEmail = emailService.findAll().get().get(0);
 			List<Employee> employeeEmails = null;
 			EmailTemplate emailTemplete = emailTemplates.stream()
 					.filter(template -> template.getTemplateId() == task.getReportTask().getTemplateId()).findAny()
@@ -92,7 +96,7 @@ public class ReportComputation implements IJob {
 				generatedReports.put(reportName, report);
 			}
 
-			emailClient.sendEmailWithAttachment(selectedEmail, emailTemplete, generatedReports);
+			emailClient.sendEmailWithAttachment(selectedEmail, emailTemplete, generatedReports, employeeEmails);
 		} catch (MessagingException e) {
 
 			e.printStackTrace();
