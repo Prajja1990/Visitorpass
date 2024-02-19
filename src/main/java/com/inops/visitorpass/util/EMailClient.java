@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import com.inops.visitorpass.entity.EMail;
 import com.inops.visitorpass.entity.EmailTemplate;
 import com.inops.visitorpass.entity.Employee;
-import com.inops.visitorpass.service.job.ReportComputation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,10 +43,14 @@ public class EMailClient {
 		// Set other properties
 		mailSender.setUsername(email.getUsername());
 		mailSender.setPassword(email.getPassword());
+		mailSender.setProtocol("smtp");
 
 		Properties properties = new Properties();
 		properties.put("mail.smtp.auth", "true");
 		properties.put("mail.smtp.starttls.enable", email.getUseTLS());
+		properties.put("mail.smtp.starttls.enable", email.getUseTLS());
+		properties.put("mail.smtp.starttls.required", email.getUseTLS());
+		properties.put("mail.smtp.ssl.enable", email.getUseSSL());
 
 		mailSender.setJavaMailProperties(properties);
 
@@ -67,6 +70,7 @@ public class EMailClient {
 		helper.setText(template.getBody(), true);
 
 		// Add attachment if provided
+
 		attachment.forEach((k, v) -> {
 			if (v != null) {
 				try {
@@ -76,6 +80,7 @@ public class EMailClient {
 				}
 			}
 		});
+
 		employeeEmails.forEach(emp -> {
 			try {
 				helper.setTo(emp.getEmail());

@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 public class JobServiceImpl implements IJobService {
 
 	private final ICompute computeService;
-	private final IJob leaveComputation, reportComputation;
+	private final IJob leaveComputation, reportComputation, integrationComputation;
 
 	@Override
 	public IJob getJob(String serviceName) {
@@ -34,6 +34,8 @@ public class JobServiceImpl implements IJobService {
 		case "Report":
 			return reportComputation;
 		// break;
+		case "Integration":
+			return integrationComputation;
 
 		default:
 			break;

@@ -56,9 +56,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-log4j2
 	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 	
-	dependencies {
+	/*dependencies {
     compileOnly 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:sanitize-20180219.1'
-	}
+	}*/
 	
 	// https://mvnrepository.com/artifact/net.bytebuddy/byte-buddy
 	implementation 'net.bytebuddy:byte-buddy:1.14.10'

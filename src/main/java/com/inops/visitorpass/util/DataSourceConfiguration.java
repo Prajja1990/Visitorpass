@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
 
-import com.inops.visitorpass.entity.IntegrationDatabase;
+import com.inops.visitorpass.entity.Integration;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +22,7 @@ import lombok.experimental.Accessors;
 @Service("dataSourceConfiguration")
 public class DataSourceConfiguration {
 
-    public JdbcTemplate setDataSource(IntegrationDatabase integration) {
+    public JdbcTemplate setDataSource(Integration integration) {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(integration.getDriverClassName());
         dataSource.setUrl(integration.getUrl());

@@ -93,7 +93,7 @@ public class ReportComputation implements IJob {
 			for (String reportName : task.getReportTask().getReports().split(",")) {
 				byte[] report = reportGeneration(reportName, from, to, employeeEmails,
 						task.getReportTask().getFromDay(), task.getReportTask().getToDay());
-				generatedReports.put(reportName, report);
+				generatedReports.put(reportName+".pdf", report);
 			}
 
 			emailClient.sendEmailWithAttachment(selectedEmail, emailTemplete, generatedReports, employeeEmails);

@@ -39,6 +39,7 @@ public class IntegrationDatabase {
 
 	@Lob
 	private String password;
+	
 
 	public void setId(Long id) {
 		this.id = id;
@@ -63,4 +64,6 @@ public class IntegrationDatabase {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
+		
 }

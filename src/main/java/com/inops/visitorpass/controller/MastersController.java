@@ -27,6 +27,8 @@ import com.inops.visitorpass.entity.EMail;
 import com.inops.visitorpass.entity.EmailTemplate;
 import com.inops.visitorpass.entity.EmailTemplateAssociation;
 import com.inops.visitorpass.entity.Employee;
+import com.inops.visitorpass.entity.Integration;
+import com.inops.visitorpass.entity.IntegrationDatabase;
 import com.inops.visitorpass.entity.Shift;
 import com.inops.visitorpass.service.ICadre;
 import com.inops.visitorpass.service.IDepartment;
@@ -35,6 +37,8 @@ import com.inops.visitorpass.service.IDivision;
 import com.inops.visitorpass.service.IEmail;
 import com.inops.visitorpass.service.IEmailTemplate;
 import com.inops.visitorpass.service.IEmployee;
+import com.inops.visitorpass.service.IIntegrationDatabaseService;
+import com.inops.visitorpass.service.IIntegrationService;
 import com.inops.visitorpass.service.IShift;
 
 import lombok.Getter;
@@ -59,6 +63,8 @@ public class MastersController {
 	private final IEmployee employeeService;
 	private final IEmail emailService;
 	private final IEmailTemplate emailTemplateService;
+	private final IIntegrationService integrationService;
+	private final IIntegrationDatabaseService integrationDatabaseService;
 
 	private Division selectedDivision;
 	private List<Division> selectedDivisions;
@@ -93,6 +99,14 @@ public class MastersController {
 
 	private DualListModel<Kvp> pickSelectedTypes;
 
+	private Integration selectedIntegration;
+	private List<Integration> selectedIntegrations;
+	private List<Integration> integrations;
+
+	private IntegrationDatabase selectedIntegrationDatabase;
+	private List<IntegrationDatabase> selectedIntegrationDatabases;
+	private List<IntegrationDatabase> integrationDatabases;
+
 	@PostConstruct
 	public void init() {
 
@@ -115,6 +129,8 @@ public class MastersController {
 		List<Kvp> pickSource = new ArrayList<>();
 		List<Kvp> pickTarget = new ArrayList<>();
 		pickSelectedTypes = new DualListModel<>(pickSource, pickTarget);
+		
+		integrations = integrationService.findAll().get();
 
 	}
 
@@ -126,6 +142,7 @@ public class MastersController {
 		this.selectedShift = new Shift();
 		this.selectedEmployee = new Employee();
 		this.selectedEmailTemplate = new EmailTemplate();
+		this.selectedIntegration = new Integration();
 	}
 
 	public void saveDivision() {
@@ -531,8 +548,12 @@ public class MastersController {
 			selectedEmailTemplate.setAssociations(selectedEmailTemplate.getPickSelectedTypes().getTarget().stream()
 					.map(kvp -> new EmailTemplateAssociation(0l, kvp.getKey(), kvp.getValue(), selectedEmailTemplate))
 					.collect(Collectors.toList()));
-			emailTemplateService.save(selectedEmailTemplate);
-			this.emailTemplates.add(selectedEmailTemplate);
+			if (selectedEmailTemplate.getTemplateId() == null) {
+				emailTemplateService.save(selectedEmailTemplate);
+				this.emailTemplates.add(selectedEmailTemplate);
+			} else {
+				emailTemplateService.save(selectedEmailTemplate);
+			}
 			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "EmailTemplate Added successfully");
 
 		} catch (Exception e) {
@@ -588,8 +609,84 @@ public class MastersController {
 		return this.selectedEmailTemplates != null && !this.selectedEmailTemplates.isEmpty();
 	}
 
+	public void saveIntegration() {
+		try {
+			if (this.selectedIntegration.getId() == null) {				
+				integrationService.save(selectedIntegration);
+				this.integrations.add(selectedIntegration);
+				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration Query Added successfully");
+
+			} else {
+				integrationService.save(selectedIntegration);
+				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration Query updated successfully");
+			}
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void deleteIntegration() {
+
+		integrationService.delete(selectedIntegration);
+		this.integrations.remove(this.selectedIntegration);
+		if (this.selectedIntegrations != null) {
+			this.selectedIntegrations.remove(this.selectedIntegration);
+		}
+		this.selectedIntegration = null;
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration query deleted successfully");
+	}
+
+	public void deleteIntegrations() {
+		integrationService.deleteAll(this.selectedIntegrations);
+		this.integrations.removeAll(this.selectedIntegrations);
+		this.selectedIntegrations = null;
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integrations query deleted successfully");
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");
+	}
+
+	public String getDeleteIntegrationsButtonMessage() {
+		if (hasSelectedIntegrations()) {
+			int size = this.selectedIntegrations.size();
+			return size > 1 ? size + " Integrations Query selected" : "1 Integration Query selected";
+		}
+
+		return "Delete";
+	}
+
+	public boolean hasSelectedIntegrations() {
+		return this.selectedIntegrations != null && !this.selectedIntegrations.isEmpty();
+	}
+	
+	public void saveIntegrationDatabase() {
+		try {
+			if (this.selectedIntegrationDatabase.getId() == null) {
+				integrationDatabaseService.save(selectedIntegrationDatabase);
+				this.integrationDatabases.add(selectedIntegrationDatabase);
+				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration Database Added successfully");
+
+			} else {
+				integrationDatabaseService.save(selectedIntegrationDatabase);
+				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration database updated successfully");
+			}
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void deleteIntegrationDatabase() {
+
+		integrationDatabaseService.delete(selectedIntegrationDatabase);
+		this.integrationDatabases.remove(this.selectedIntegrationDatabase);		
+		this.selectedIntegration = null;
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration database deleted successfully");
+	}
+
 	public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
 		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
 	}
 
 }
+

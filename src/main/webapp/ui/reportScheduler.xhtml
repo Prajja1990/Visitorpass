@@ -154,32 +154,32 @@
                       </div>
                 </div>
                     <div class="formgrid grid">
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="everyMinutes">Schedule Minutes for</p:outputLabel>     
                         <p:selectOneMenu id="everyMinutes" value="#{jobSchedulerController.selectedScheduledTask.everyMinutes}">
                           <f:selectItem itemLabel="Specific" itemValue=""/>
                           <f:selectItem itemLabel="Every" itemValue="*/"/>                                                            
                       </p:selectOneMenu>
                       </div>
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="minutes">Minutes to Schedule</p:outputLabel>     
                         <p:spinner id="minutes" value="#{jobSchedulerController.selectedScheduledTask.minutes}" buttons="vertical" min="0" max="60"
                         upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                       </div>
   
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="hours">Hours to Schedule</p:outputLabel>     
                         <p:spinner id="hours" value="#{jobSchedulerController.selectedScheduledTask.hours}" buttons="vertical" min="0" max="24"
                         upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                       </div>
   
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="dayOfMonth">Day of the month to Schedule</p:outputLabel>     
                         <p:spinner id="dayOfMonth" value="#{jobSchedulerController.selectedScheduledTask.dayOfMonth}" buttons="vertical" min="0" max="31"
                         upButtonStyleClass="ui-button-secondary" downButtonStyleClass="ui-button-secondary"/>
                       </div>
   
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="month">Month to Schedule</p:outputLabel>     
                         <p:selectOneMenu id="month" value="#{jobSchedulerController.selectedScheduledTask.month}">
                           <f:selectItem itemLabel="Every" itemValue="*"/>
@@ -189,7 +189,7 @@
                       </p:selectOneMenu>
                       </div>
   
-                      <div class="field">
+                      <div class="field col">
                         <p:outputLabel for="dayOfWeek">Day of the week to Schedule</p:outputLabel>     
                         <p:selectOneMenu id="dayOfWeek" value="#{jobSchedulerController.selectedScheduledTask.dayOfWeek}">
                           <f:selectItem itemLabel="Every" itemValue="?"/>

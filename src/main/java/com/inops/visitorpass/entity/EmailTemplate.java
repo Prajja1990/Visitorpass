@@ -45,7 +45,7 @@ public class EmailTemplate {
 	@Lob
 	private String body;
 
-	@OneToMany(mappedBy = "emailTemplate", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "emailTemplate", cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
 	private List<EmailTemplateAssociation> associations = new ArrayList<>();
 
 	@Transient

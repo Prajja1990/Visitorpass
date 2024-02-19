@@ -23,7 +23,7 @@
       <p:growl id="messages" showDetail="true" />
 
       <div class="card crud-demo">
-        <h5>Department Details</h5>
+        <h5>Integration Details</h5>
         <p:toolbar>
           <p:toolbarGroup>
               <p:commandButton value="New" icon="pi pi-plus" actionListener="#{mastersController.openNew}"
@@ -31,10 +31,10 @@
                   styleClass="ui-button-success" style="margin-right: .5rem">
                   <p:resetInput target=":dialogs:manage-product-content" />
               </p:commandButton>
-              <p:commandButton id="delete-products-button" value="#{mastersController.deleteDepartmentsButtonMessage}"
-                  icon="pi pi-trash" actionListener="#{mastersController.deleteDepartments}"
-                  styleClass="ui-button-danger" disabled="#{!mastersController.hasSelectedDepartments()}" update="@this">
-                  <p:confirm header="Confirmation" message="Delete the selected departments?"
+              <p:commandButton id="delete-products-button" value="#{mastersController.deleteIntegrationsButtonMessage}"
+                  icon="pi pi-trash" actionListener="#{mastersController.deleteIntegrations}"
+                  styleClass="ui-button-danger" disabled="#{!mastersController.hasSelectedIntegrations()}" update="@this">
+                  <p:confirm header="Confirmation" message="Delete the selected Integration Querys"
                       icon="pi pi-exclamation-triangle" />
               </p:commandButton>
           </p:toolbarGroup>
@@ -46,12 +46,12 @@
           </p:toolbarGroup>
       </p:toolbar>
 
-      <p:dataTable id="dt-products" widgetVar="dtProducts" var="product" value="#{mastersController.departments}"
-          reflow="true" styleClass="products-table" selection="#{mastersController.selectedDepartments}"
+      <p:dataTable id="dt-products" widgetVar="dtProducts" var="product" value="#{mastersController.integrations}"
+          reflow="true" styleClass="products-table" selection="#{mastersController.selectedIntegrations}"
           rowKey="#{product.id}" paginator="true" rows="10" rowSelectMode="add" paginatorPosition="bottom">
           <f:facet name="header">
               <div class="products-table-header">
-                  <span style="font-weight: bold">Departments</span>
+                  <span style="font-weight: bold">Integartion Details</span>
                   <span class="filter-container ui-input-icon-left"> <i class="pi pi-search"></i>
                       <p:inputText id="globalFilter" onkeyup="PF('dtProducts').filter()" placeholder="Search" />
                   </span>
@@ -70,21 +70,33 @@
               <h:outputText value="#{product.id}" />
           </p:column>
           
-          <p:column headerText="Name" sortBy="#{product.departmentName}" filterBy="#{product.departmentName}">
-              <h:outputText value="#{product.departmentName}" />
+          <p:column headerText="Source Integration Query" sortBy="#{product.sourceIntegrationQuery}" filterBy="#{product.sourceIntegrationQuery}">
+              <h:outputText value="#{product.sourceIntegrationQuery}" />
+          </p:column>
+
+          <p:column headerText="Source Fields" sortBy="#{product.sourceFields}" filterBy="#{product.sourceFields}">
+              <h:outputText value="#{product.sourceFields}" />
+          </p:column>
+
+          <p:column headerText="Destination Fields" sortBy="#{product.destinationFields}" filterBy="#{product.destinationFields}">
+              <h:outputText value="#{product.destinationFields}" />
+          </p:column>
+
+          <p:column headerText="Destination Integration Query" sortBy="#{product.destinationIntegrationQuery}" filterBy="#{product.destinationIntegrationQuery}">
+              <h:outputText value="#{product.destinationIntegrationQuery}" />
           </p:column>
                            
           <p:column exportable="false">
               <p:commandButton icon="pi pi-pencil" update=":dialogs:manage-product-content"
                   oncomplete="PF('manageProductDialog').show()"
                   styleClass="edit-button rounded-button ui-button-success" process="@this">
-                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedDepartment}" />
+                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedIntegration}" />
                   <p:resetInput target=":dialogs:manage-product-content" />
               </p:commandButton>
               <p:commandButton class="ui-button-warning rounded-button" icon="pi pi-trash"
                                process="@this"
                                oncomplete="PF('deleteProductDialog').show()">
-                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedDepartment}" />
+                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedIntegration}" />
               </p:commandButton>
           </p:column>
 
@@ -93,25 +105,56 @@
   </h:form>
 
   <h:form id="dialogs">
-      <p:dialog header="Department Details" showEffect="fade" modal="true" widgetVar="manageProductDialog"
+      <p:dialog header="Database Query Details" showEffect="fade" modal="true" widgetVar="manageProductDialog"
           responsive="true">
           <p:outputPanel id="manage-product-content" class="ui-fluid">
-              <p:outputPanel rendered="#{not empty mastersController.selectedDepartment}">
-            
+              <p:outputPanel rendered="#{not empty mastersController.selectedIntegration}">
+                      
               <div class="field">
-                <p:outputLabel for="id">Department Id</p:outputLabel>
-                <p:inputText id="id" value="#{mastersController.selectedDepartment.id}" required="true" />
+                <p:outputLabel for="sourceIntegrationQuery">Source Integration Query</p:outputLabel>
+                <p:inputTextarea rows="5" cols="30"  id="sourceIntegrationQuery" value="#{mastersController.selectedIntegration.sourceIntegrationQuery}" required="true" />
              </div>      
                   <div class="field">
-                      <p:outputLabel for="name">Department Name</p:outputLabel>
-                      <p:inputText id="name" value="#{mastersController.selectedDepartment.departmentName}" required="true" />
-                  </div>              
-                  
+                      <p:outputLabel for="sourceFields">Source fields Name</p:outputLabel>
+                      <p:inputTextarea rows="5" cols="30"  id="sourceFields" value="#{mastersController.selectedIntegration.sourceFields}" required="true" />
+                  </div>
+                  <div class="field">
+                    <p:outputLabel for="destinationIntegrationQuery">Destinatiob Integration Query</p:outputLabel>
+                    <p:inputTextarea rows="5" cols="30"  id="destinationIntegrationQuery" value="#{mastersController.selectedIntegration.destinationIntegrationQuery}" required="true" />
+                 </div> 
+                  <div class="field">
+                    <p:outputLabel for="destinationFields">Destination fields Name</p:outputLabel>
+                    <p:inputTextarea rows="5" cols="30"  id="destinationFields" value="#{mastersController.selectedIntegration.destinationFields}" required="true" />
+                </div>    
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <p:outputLabel for="databaseName">Database Name</p:outputLabel>
+                        <p:inputText id="databaseName" value="#{mastersController.selectedIntegration.databaseName}" required="true" />
+                     </div>
+                     <div class="field col">
+                        <p:outputLabel for="driverClassName">Driver Class Name</p:outputLabel>
+                        <p:inputText id="driverClassName" value="#{mastersController.selectedIntegration.driverClassName}" required="true" />
+                    </div>
+                    <div class="field col">
+                        <p:outputLabel for="url">Database Url</p:outputLabel>
+                        <p:inputText id="url" value="#{mastersController.selectedIntegration.url}" required="true" />
+                    </div>
+                </div>
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <p:outputLabel for="username">Username</p:outputLabel>
+                        <p:inputText id="username" value="#{mastersController.selectedIntegration.username}" required="true" />
+                    </div>
+                    <div class="field col">
+                        <p:outputLabel for="password">Password</p:outputLabel>
+                        <p:password id="password" value="#{mastersController.selectedIntegration.password}" required="true" />
+                    </div>          
+                </div>
               </p:outputPanel>
           </p:outputPanel>
 
           <f:facet name="footer">
-              <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mastersController.saveDepartment}"
+              <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mastersController.saveIntegration}"
                   update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
               <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageProductDialog').hide()"
                   class="ui-button-secondary" type="button" />
@@ -119,8 +162,8 @@
       </p:dialog>
 
       <p:confirmDialog widgetVar="deleteProductDialog" showEffect="fade" width="300"
-          message="Delete the department?" header="Confirm" severity="warn">
-          <p:commandButton value="Yes" icon="pi pi-check" actionListener="#{mastersController.deleteDepartment}"
+          message="Delete the Integration Query?" header="Confirm" severity="warn">
+          <p:commandButton value="Yes" icon="pi pi-check" actionListener="#{mastersController.deleteIntegration}"
               process="@this" update=":form:delete-products-button"
               oncomplete="PF('deleteProductDialog').hide()" />
           <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"
