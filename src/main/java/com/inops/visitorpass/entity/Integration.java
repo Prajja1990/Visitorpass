@@ -29,7 +29,7 @@ public class Integration {
 	private String sourceIntegrationQuery;
 
 	@Lob
-	private String sourceFields;
+	private String sourceApi;
 
 	@Lob
 	private String destinationIntegrationQuery;
@@ -60,10 +60,6 @@ public class Integration {
 		this.sourceIntegrationQuery = sourceIntegrationQuery;
 	}
 
-	public void setSourceFields(String sourceFields) {
-		this.sourceFields = sourceFields;
-	}
-
 	public void setDestinationIntegrationQuery(String destinationIntegrationQuery) {
 		this.destinationIntegrationQuery = destinationIntegrationQuery;
 	}
@@ -90,6 +86,10 @@ public class Integration {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public void setSourceApi(String sourceApi) {
+		this.sourceApi = sourceApi;
 	}
 					
 }

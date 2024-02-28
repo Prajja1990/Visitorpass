@@ -203,8 +203,7 @@
                     transferOnCheckboxClick="true" showCheckbox="true" converter="#{kvpConverter}"
                     responsive="true" showSourceControls="false" showTargetControls="false">
                     <p:ajax event="transfer" listener="#{mastersController.onTransfer}" update=":form:messages" />
-                    <p:ajax event="select" listener="#{mastersController.onSelect}" update=":form:messages" />
-
+                  
                     <p:column style="width:94%">
                         <div class="flex align-items-center">
                             <h:outputText value="#{selectedType.key}" /> :

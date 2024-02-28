@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.inops.visitorpass.entity.EmailTemplate;
-import com.inops.visitorpass.entity.ReportTask;
 import com.inops.visitorpass.entity.ScheduledTask;
 import com.inops.visitorpass.service.IEmailTemplate;
 import com.inops.visitorpass.service.IScheduledTask;

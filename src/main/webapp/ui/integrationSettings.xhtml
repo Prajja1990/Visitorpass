@@ -74,8 +74,8 @@
               <h:outputText value="#{product.sourceIntegrationQuery}" />
           </p:column>
 
-          <p:column headerText="Source Fields" sortBy="#{product.sourceFields}" filterBy="#{product.sourceFields}">
-              <h:outputText value="#{product.sourceFields}" />
+          <p:column headerText="Source Api" sortBy="#{product.sourceApi}" filterBy="#{product.sourceApi}">
+              <h:outputText value="#{product.sourceApi}" />
           </p:column>
 
           <p:column headerText="Destination Fields" sortBy="#{product.destinationFields}" filterBy="#{product.destinationFields}">
@@ -115,8 +115,8 @@
                 <p:inputTextarea rows="5" cols="30"  id="sourceIntegrationQuery" value="#{mastersController.selectedIntegration.sourceIntegrationQuery}" required="true" />
              </div>      
                   <div class="field">
-                      <p:outputLabel for="sourceFields">Source fields Name</p:outputLabel>
-                      <p:inputTextarea rows="5" cols="30"  id="sourceFields" value="#{mastersController.selectedIntegration.sourceFields}" required="true" />
+                      <p:outputLabel for="sourceApi">Source sourceApi</p:outputLabel>
+                      <p:inputTextarea rows="5" cols="30"  id="sourceApi" value="#{mastersController.selectedIntegration.sourceApi}" />
                   </div>
                   <div class="field">
                     <p:outputLabel for="destinationIntegrationQuery">Destinatiob Integration Query</p:outputLabel>

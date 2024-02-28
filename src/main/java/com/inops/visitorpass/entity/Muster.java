@@ -1,9 +1,12 @@
 package com.inops.visitorpass.entity;
 
+import java.time.LocalDate;
+
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -60,5 +63,14 @@ public class Muster {
 					
 	@Column(name = "Adjshrthrs")
 	private String shortHrs;
+	
+	@Transient
+	private String empName;
+	@Transient
+	private String department;
+	@Transient
+	private String cdare;
+	@Transient
+	private LocalDate attendanceDate;
 
 }
