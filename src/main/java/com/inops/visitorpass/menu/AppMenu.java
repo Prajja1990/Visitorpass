@@ -86,7 +86,7 @@ public class AppMenu {
 
 		menuCategoriesEntity.stream().filter(cat->cat.isCustom()).forEach(menuCategory -> {
 			List<MenuItem> generalMenuItems = new ArrayList<>();
-			generalMenuItems.addAll(menuCategory.getMenuItem().stream()
+			generalMenuItems.addAll(menuCategory.getMenuItem().stream().filter(menu->menu.isEnable())
 					.map(menuItem -> new MenuItem(menuItem.getLabel(), menuItem.getUrl()))
 					.collect(Collectors.toList()));
 			if (!generalMenuItems.isEmpty()) {

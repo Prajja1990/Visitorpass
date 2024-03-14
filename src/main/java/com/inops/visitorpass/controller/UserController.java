@@ -72,7 +72,7 @@ public class UserController {
 
 	private List<Employee> employees;
 	private String employeeId;
-	private long entitlementId;	
+	private long entitlementId;
 	private String roleName;
 
 	@PostConstruct
@@ -80,6 +80,9 @@ public class UserController {
 		selectedMenuCategories = new String[100];
 		users = userService.findAll().get();
 		dbRoleEntitlements = entitlementService.findAll().get();
+		dbRoleEntitlements.forEach(entitlement -> {
+			entitlement.getMenuItem().removeIf(menu -> !menu.getMenuCategory().isCustom());
+		});
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
 		rollMenue();
 		getRoles();
@@ -107,12 +110,14 @@ public class UserController {
 	private void rollMenue() {
 		appMenuCategories = new ArrayList<>();
 		menuCategoryService.findAll().get().forEach(menuCategori -> {
-			SelectItemGroup categories = new SelectItemGroup(menuCategori.getLabel());
-			List<SelectItem> arr = menuCategori.getMenuItem().stream()
-					.map(menu -> new SelectItem(menu.getLabel(), menu.getLabel())).collect(Collectors.toList());
-			SelectItem[] objectArray = arr.toArray(new SelectItem[0]);
-			categories.setSelectItems(objectArray);
-			appMenuCategories.add(categories);
+			if (menuCategori.isCustom()) {
+				SelectItemGroup categories = new SelectItemGroup(menuCategori.getLabel());
+				List<SelectItem> arr = menuCategori.getMenuItem().stream().filter(menu->menu.isEnable())
+						.map(menu -> new SelectItem(menu.getLabel(), menu.getLabel())).collect(Collectors.toList());
+				SelectItem[] objectArray = arr.toArray(new SelectItem[0]);
+				categories.setSelectItems(objectArray);
+				appMenuCategories.add(categories);
+			}
 		});
 	}
 
@@ -196,20 +201,20 @@ public class UserController {
 	}
 
 	public void saveUser() {
-		try {			
+		try {
 			selectedUser.setRole(Role.findByValue(roleName));
 			if (this.selectedUser.getId() == null) {
-				selectedUser.setEmployee(employees.stream().filter(emp -> emp.getEmployeeId().equals(employeeId)).findAny()
-						.orElse(null));
+				selectedUser.setEmployee(employees.stream().filter(emp -> emp.getEmployeeId().equals(employeeId))
+						.findAny().orElse(null));
 				selectedUser.setRoleEntitlement(dbRoleEntitlements.stream()
-						.filter(role -> role.getEntitlementRoleId()==entitlementId).findAny().orElse(null));
+						.filter(role -> role.getEntitlementRoleId() == entitlementId).findAny().orElse(null));
 				userService.saveUser(selectedUser);
 				this.users.add(selectedUser);
 				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "User Added successfully");
 
 			} else {
 				User user = users.stream().filter(usr -> usr.getId() == selectedUser.getId()).findAny().orElse(null);
-				if (user == null) {	
+				if (user == null) {
 					user = new User();
 					user.setEmployee(employees.stream().filter(emp -> emp.getEmployeeId().equals(employeeId)).findAny()
 							.orElse(null));
@@ -220,7 +225,7 @@ public class UserController {
 					user.setEmployee(employees.stream().filter(emp -> emp.getEmployeeId().equals(employeeId)).findAny()
 							.orElse(null));
 					user.setRoleEntitlement(dbRoleEntitlements.stream()
-							.filter(role -> role.getEntitlementRoleId()==entitlementId).findAny().orElse(null));
+							.filter(role -> role.getEntitlementRoleId() == entitlementId).findAny().orElse(null));
 					user.setEmail(selectedUser.getEmail());
 					user.setFirstName(selectedUser.getFirstName());
 					user.setLastName(selectedUser.getLastName());

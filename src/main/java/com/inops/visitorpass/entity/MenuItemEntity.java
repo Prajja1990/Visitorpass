@@ -57,6 +57,7 @@ public class MenuItemEntity implements Serializable {
 	private String badge;
 	private String parentLabel;
 	private String imageSrc;
+	private boolean enable;
 
 	@ManyToOne
 	@JoinColumn(name = "menuCategoryId", nullable = false,referencedColumnName = "Menu_Category_Id")	
