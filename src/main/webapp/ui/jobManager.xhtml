@@ -120,10 +120,8 @@
                   <div class="field">
                     <p:outputLabel for="type">Job Type</p:outputLabel>                    
                     <p:selectOneMenu id="type" value="#{jobSchedulerController.selectedScheduledTask.taskType}">
-                        <f:selectItem itemLabel="Select" itemValue=""/>
-                        <f:selectItem itemLabel="Leave" itemValue="Leave"/>
-                        <f:selectItem itemLabel="Compute" itemValue="Compute"/>
-                        <f:selectItem itemLabel="Muster" itemValue="Muster"/>
+                        <f:selectItem itemLabel="Select" itemValue=""/>                      
+                        <f:selectItem itemLabel="Notification" itemValue="Compute"/>                       
                         <f:selectItem itemLabel="Integration" itemValue="Integration"/>                                               
                     </p:selectOneMenu>
                 </div>                                 
