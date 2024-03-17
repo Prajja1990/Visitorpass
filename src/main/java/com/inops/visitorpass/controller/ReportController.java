@@ -77,24 +77,28 @@ public class ReportController implements Serializable {
 		attendanceReports
 				.setSelectItems(new SelectItem[] { new SelectItem("Attendance Register", "Attendance Register"),
 						new SelectItem("Absenteesm Register", "Absenteesm Register"),
-						new SelectItem("Physical Days", "Physical Days"),
-						new SelectItem("Late In Register", "Late In Register"),
-						new SelectItem("Over Time Summary", "Over Time Summary"),
-						new SelectItem("Early Out Register", "Early Out Register"),
-						new SelectItem("Extra Hours Register", "Extra Hours Register"),
-						new SelectItem("Continous Absenteesim", "Continous Absenteesim"),
-						new SelectItem("All Punches", "All Punches"),
-						new SelectItem("Consolidated Report", "Consolidated Report"),
-						new SelectItem("Daily Summary", "Daily Summary"), new SelectItem("LWP Details", "LWP Details"),
-						new SelectItem("LWP Summary", "LWP Summary"),
-						new SelectItem("ThreeYears Attendance", "ThreeYears Attendance"),
-						new SelectItem("Detailed Physical Days", "Detailed Physical Days"),
-						new SelectItem("Finantial Cutlist", "Finantial Cutlist"),
-						new SelectItem("Extra 4 Hours", "Extra 4 Hours"),
-						new SelectItem("Cutlist OverTime", "Cutlist OverTime"),
-						new SelectItem("Oneline Consolidated", "Oneline Consolidated"),
-						new SelectItem("Payroll Short Hours", "Payroll Short Hours"),
-						new SelectItem("Mandays Detailed", "Mandays Detailed")});
+						//new SelectItem("Physical Days", "Physical Days"),
+						//new SelectItem("Late In Register", "Late In Register"),
+						//new SelectItem("Over Time Summary", "Over Time Summary"),
+						//new SelectItem("Early Out Register", "Early Out Register"),
+						//new SelectItem("Extra Hours Register", "Extra Hours Register"),
+						//new SelectItem("Continous Absenteesim", "Continous Absenteesim"),
+				/*
+				 * new SelectItem("All Punches", "All Punches"), new
+				 * SelectItem("Consolidated Report", "Consolidated Report"), new
+				 * SelectItem("Daily Summary", "Daily Summary"), new SelectItem("LWP Details",
+				 * "LWP Details"), new SelectItem("LWP Summary", "LWP Summary"), new
+				 * SelectItem("ThreeYears Attendance", "ThreeYears Attendance"), new
+				 * SelectItem("Detailed Physical Days", "Detailed Physical Days"), new
+				 * SelectItem("Finantial Cutlist", "Finantial Cutlist"), new
+				 * SelectItem("Extra 4 Hours", "Extra 4 Hours"), new
+				 * SelectItem("Cutlist OverTime", "Cutlist OverTime"), new
+				 * SelectItem("Oneline Consolidated", "Oneline Consolidated"), new
+				 * SelectItem("Payroll Short Hours", "Payroll Short Hours"), new
+				 * SelectItem("Mandays Detailed", "Mandays Detailed")
+				 */
+						}
+				);
 
 		SelectItemGroup leaveReports = new SelectItemGroup("Leave Reports");
 		leaveReports.setSelectItems(new SelectItem[] { new SelectItem("Leave Transaction", "Leave Transaction"),
@@ -104,11 +108,11 @@ public class ReportController implements Serializable {
 		SelectItemGroup visitorReports = new SelectItemGroup("Visitors Reports");
 		visitorReports.setSelectItems(new SelectItem[] { new SelectItem("Visitors Register", "Visitors Register") });
 
-		SelectItemGroup logReports = new SelectItemGroup("Log Reports");
-		logReports.setSelectItems(new SelectItem[] { new SelectItem("Log Register", "Log Register") });
+		SelectItemGroup logReports = new SelectItemGroup("Events Reports");
+		logReports.setSelectItems(new SelectItem[] { new SelectItem("Events Register", "Events Register") });
 
 		reportTypes.add(attendanceReports);
-		reportTypes.add(leaveReports);
+		//reportTypes.add(leaveReports);
 		reportTypes.add(logReports);
 		// reportTypes.add(visitorReports);
 
@@ -212,7 +216,7 @@ public class ReportController implements Serializable {
 					filteredList, report.getReportName());
 			break;	
 
-		case "All Punches":
+		case "Events Register":
 			buffer = reportGenerationService.getAllPunches().generate(report.getDateRange().get(0), to, filteredList,
 					report.getReportName());
 			break;

@@ -7,7 +7,7 @@
     </ui:define>
 
     <ui:define name="description">
-        Tool provides an Outlook for endusers who is pertinant to operate the Visitor pass genereation and pre-approval
+        Tool provides an Outlook for endusers who is pertinant to operate the Event management for the organization
         request process.
     </ui:define>
 
@@ -53,39 +53,121 @@
     <ui:define name="implementation">
         <div class="card">
             <h:form id="form">
+                <p:growl id="messages" showDetail="true" />
                 <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true">
                     <p:autoUpdate />
                 </p:growl>
                 <div class="card">
-                    <p:carousel value="#{dashboardController.leaveBalances}" var="product" 
+                    <p:carousel value="#{dashboardController.approvalEvents}" var="product"  id="RegisteredValue"
                                 responsiveOptions="#{dashboardController.responsiveOptions}" numVisible="3" numScroll="1">
                         <f:facet name="header">
-                            <h5>Leave Balance for the whole year</h5>
+                            <h5>Upcomming Registered events</h5>
                         </f:facet>
             
                         <div class="product-item">
                             <div class="product-item-content">
                                 <div class="mb-3">
-                                    <p:graphicImage name="demo/images/product/#{product.leaveType.leaveCode}" styleClass="product-image"/>
+                                    <p:graphicImage name="demo/images/product/#{product.id}" styleClass="product-image"/>
                                 </div>
                                 <div>
-                                    <h4 class="mb-1">#{product.leaveType.leaveCode}</h4>
+                                    <h4 class="mb-1">#{product.eventTitle}</h4>
+                                    <h3 class="mb-1">#{product.division}</h3>
                                     <h6 class="mt-0 mb-3">
-                                        <h:outputText value="#{product.closingBalance}">
-                                            <f:convertNumber type="currency" pattern="¤#00.00" currencySymbol="#" />
+                                        <h:outputText value="#{product.fromDate} to #{product.toDate} ">                                           
                                         </h:outputText>
                                     </h6>
                                     <!--<span class="product-badge status-#{product.inventoryStatus.name().toLowerCase()}">#{product.inventoryStatus.text}</span>-->
-                                    <div class="mt-5">
-                                        <p:commandButton type="button" icon="pi pi-search" styleClass="rounded-button mr-2" />
+                                    <div class="mt-5">                                       
+                                        <p:commandButton type="button" icon="pi pi-search" styleClass="rounded-button mr-2" 
+                                        onclick="PF('dialogWidget').show();">
+                          <!-- Pass selected product to dialog -->
+                          <f:setPropertyActionListener value="#{product}" target="#{dashboardController.selectedScheduleEvent}" />
+                      </p:commandButton>
                                         <p:commandButton type="button" icon="pi pi-star" styleClass="ui-button-success rounded-button mr-2" />
-                                        <p:commandButton type="button" icon="pi pi-cog" styleClass="ui-button-help rounded-button" />
+                                     
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </p:carousel>
+                    <p:dialog header="Join the event" widgetVar="dialogWidget" modal="true">
+                   
+                        <p:outputPanel id="manage-product-content" class="ui-fluid">
+                            <div class="field">
+                            <p:outputLabel > Friday, 15 March · 15:30 – 16:30</p:outputLabel>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel >Time zone: Asia/Kolkata</p:outputLabel>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel > Google Meet joining info</p:outputLabel>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel > Video call link </p:outputLabel>
+                            <a href="https://meet.google.com/rmw-ptcr-njb" target="_blank"> join</a>
+                        </div>
+                        <div class="field">
+
+                        </div>
+                        <p:outputLabel >Scan to join from mobile </p:outputLabel>
+                        <p:outputPanel id="photo">
+                            <p:graphicImage name="demo/images/photocam/qr.jpeg"
+                               />
+    
+                        </p:outputPanel>
+                        </p:outputPanel>                
+                         
+                    </p:dialog>
+                                        
                 </div>
+
+                <div class="card crud-demo">
+                    <h5>Feedback Survay</h5>
+                               
+                  <p:dataTable id="dt-products" widgetVar="dtProducts" var="product" value="#{mastersController.feedback}"
+                      reflow="true" styleClass="products-table" selection="#{mastersController.selectedScheduleEvents}"
+                      rowKey="#{product.id}" paginator="true" rows="10" rowSelectMode="add" paginatorPosition="bottom">
+                      <f:facet name="header">
+                          <div class="products-table-header">
+                              <span style="font-weight: bold">Sehedule Events</span>
+                              <span class="filter-container ui-input-icon-left"> <i class="pi pi-search"></i>
+                                  <p:inputText id="globalFilter" onkeyup="PF('dtProducts').filter()" placeholder="Search" />
+                              </span>
+                          </div>
+                      </f:facet>
+                                 
+            
+                      <p:column selectionMode="multiple" exportable="false"></p:column>
+            
+                      <p:column headerText="Code" sortBy="#{product.id}" filterBy="#{product.id}">
+                          <h:outputText value="#{product.id}" />
+                      </p:column>
+                      
+                      <p:column headerText="EventTitle" sortBy="#{product.eventTitle}" filterBy="#{product.eventTitle}">
+                          <h:outputText value="#{product.eventTitle}" />
+                      </p:column>
+            
+                      <p:column headerText="Event start" sortBy="#{product.fromDate}" filterBy="#{product.fromDate}">
+                        <h:outputText value="#{product.fromDate}" />
+                    </p:column>
+            
+                    <p:column headerText="Event End" sortBy="#{product.toDate}" filterBy="#{product.toDate}">
+                        <h:outputText value="#{product.toDate}" />
+                    </p:column>
+                                                         
+                      <p:column exportable="false">
+                          <p:commandButton icon="pi pi-pencil" 
+                              oncomplete="PF('manageProductDialog').show()"
+                              styleClass="edit-button rounded-button ui-button-success" process="@this">
+                              <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedScheduleEvent}" />
+                             
+                          </p:commandButton>                      
+                      </p:column>
+            
+                  </p:dataTable>
+                </div>
+                
+                
                 <div class="card">
                     <h5 class="mt-0">Metrics</h5>
                     <p:dashboard id="responsive" model="#{dashboardController.responsiveModel}" responsive="true">
@@ -138,7 +220,7 @@
                             <p:barChart model="#{dashboardController.stackedBarModel}" style="width: 100%; height: 100%;" />
                         </p:panel>
             
-                        <p:panel id="donut" header="Head count" closable="true" styleClass="chart-dashlet" >
+                        <p:panel id="donut" header="Head count Developer event" closable="true" styleClass="chart-dashlet" >
                             <p:ajax event="close" listener="#{dashboardController.handleClose}" />
                             <f:facet name="options">
                                 <p:menu>
@@ -218,6 +300,45 @@
                     </div>
                 </p:dataScroller>
             </h:form>
+
+            <h:form id="dialogs">
+                <p:dialog header="Feedback Details" showEffect="fade" modal="true" widgetVar="manageProductDialog"
+                    responsive="true">
+                 <p:panelGrid columns="2" columnClasses="label, value">
+                        <p:outputLabel for="question1" value="Question 1: How would you rate the training content?" />
+                        <p:rating id="question1" value="" stars="5" />
+
+                        <p:outputLabel for="question2" value="Question 2: Was the training material presented clearly?" />
+                        <p:selectBooleanCheckbox id="question2" value="" />
+
+                        <p:outputLabel for="question3" value="Question 3: Did the training meet your expectations?" />
+                        <p:selectOneMenu id="question3" value="">
+                            <f:selectItem itemLabel="Excellent" itemValue="5" />
+                            <f:selectItem itemLabel="Good" itemValue="4" />
+                            <f:selectItem itemLabel="Average" itemValue="3" />
+                            <f:selectItem itemLabel="Fair" itemValue="2" />
+                            <f:selectItem itemLabel="Poor" itemValue="1" />
+                        </p:selectOneMenu>
+
+                        <p:outputLabel for="question4" value="Question 4: What aspects of the training did you find most valuable?" />
+                        <p:inputTextarea id="question4" value="" rows="5" />
+
+                        <p:outputLabel for="question5" value="Question 5: Do you have any suggestions for improvement?" />
+                        <p:inputTextarea id="question5" value="" rows="5" />
+                    </p:panelGrid>   
+          
+                    <f:facet name="footer">
+                        <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mastersController.saveScheduleEvent}"
+                            />
+                        <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageProductDialog').hide()"
+                            class="ui-button-secondary" type="button" />
+                    </f:facet>
+                </p:dialog>
+                        
+            
+              </h:form>
+
+          
         </div>
     </ui:define>
 

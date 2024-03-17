@@ -7,12 +7,12 @@
   template="/WEB-INF/template.xhtml"
 >
   <ui:define name="title">
-    Employee <span class="subitem">Punch Details</span>
+    Registered <span class="subitem">Eventss view</span>
   </ui:define>
 
   <ui:define name="description">
     Tool provides an Outlook for endusers who is pertinant to operate the
-    employees daily punch operations process.
+    employees Registered events operations process.
   </ui:define>
 
   <ui:param name="documentationLink" value="/components/schedule" />
@@ -26,11 +26,7 @@
         <h5>Punch Details</h5>
         <p:toolbar>
           <p:toolbarGroup>
-              <p:commandButton value="Search" icon="pi pi-search" actionListener="#{punchController.openNew}"
-                  update=":dialogs:manage-product-content" oncomplete="PF('manageProductDialog').show()"
-                  styleClass="ui-button-success" style="margin-right: .5rem">
-                  <p:resetInput target=":dialogs:manage-product-content" />
-              </p:commandButton>             
+                        
           </p:toolbarGroup>
           <p:toolbarGroup align="right">             
               <p:commandButton value="Export" icon="pi pi-upload" styleClass="ui-button-help" ajax="false">
@@ -64,7 +60,10 @@
                             showTime="true" appendTo="@(body)"/>
 
               <p:outputLabel for="allDay" value="All Day" styleClass="font-bold"/>
-              <h:selectBooleanCheckbox id="allDay" value="#{punchController.event.allDay}"/> --> 
+              <h:selectBooleanCheckbox id="allDay" value="#{punchController.event.allDay}"/> 
+
+              <p:outputLabel for="desc" value="Description" styleClass="font-bold"/>
+              <h:inputTextarea  id="desc" value="#{punchController.event.description}"/> 
             </h:panelGrid>
           </p:outputPanel>
             <div class="flex justify-content-between mt-3">

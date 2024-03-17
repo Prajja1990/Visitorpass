@@ -289,7 +289,7 @@ public class ReportGenerationService {
 
 				List<Punch> allPunches = (List<Punch>) allPunch.dataExtraction(from, to, id, type);
 
-				return generateFinalReport(from, to, allPunches, "Allpunches.jrxml", "allPunches");
+				return generateFinalReport(from, to, allPunches, "Events.jrxml", "events");
 
 			} catch (Exception e) {
 				log.error("GetAllPunches for {} data exception {}", type, e);

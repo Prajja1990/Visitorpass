@@ -25,11 +25,14 @@ package com.inops.visitorpass.controller;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -67,11 +70,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import javax.enterprise.context.RequestScoped;
 
 import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.LeaveBalance;
 import com.inops.visitorpass.entity.Muster;
+import com.inops.visitorpass.entity.ScheduleEvent;
 import com.inops.visitorpass.entity.User;
+import com.inops.visitorpass.repository.ScheduleEventRepository;
 import com.inops.visitorpass.service.ILeaveBalance;
 import com.inops.visitorpass.service.IMuster;
 
@@ -86,6 +92,7 @@ import lombok.extern.log4j.Log4j2;
 @Component("dashboardController")
 @Scope("session")
 @RequiredArgsConstructor
+@RequestScoped
 public class DashboardController implements Serializable {
 
 	@Autowired
@@ -93,8 +100,10 @@ public class DashboardController implements Serializable {
 
 	private final ILeaveBalance leaveBalanceService;
 	private final IMuster musterService;
+	private final ScheduleEventRepository scheduleEventRepository;
 
 	private List<LeaveBalance> leaveBalances;
+	private ScheduleEvent selectedScheduleEvent;
 	private List<Muster> musters;
 	private List<ResponsiveOption> responsiveOptions;
 	private List<Employee> employees;
@@ -110,7 +119,9 @@ public class DashboardController implements Serializable {
 	private DonutChartModel donutModel;
 	private LineChartModel lineModel;
 	private BarChartModel stackedBarModel;
-
+	private User user;
+	private List<ScheduleEvent> scheduleEvents, approvalEvents, registeredEvents;
+	Random random = new Random();
 	private String months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September",
 			"October", "November", "December" };
 
@@ -118,7 +129,14 @@ public class DashboardController implements Serializable {
 	public void init() {
 
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User user = (User) auth.getPrincipal();
+		user = (User) auth.getPrincipal();
+
+		approvalEvents = scheduleEventRepository
+				.findAllByEventStatusAndFromDateGreaterThan("Published", LocalDateTime.now())		
+		  .stream() .filter(event -> event.getRegistered().stream() .anyMatch(reg ->
+		  reg.getUserId().equals(user.getEmail()))) .collect(Collectors.toList());
+		 
+
 		Employee employee = user.getEmployee();
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
 		leaveBalances = leaveBalanceService.findAllByEmployeeId(LocalDate.of(LocalDate.now().getYear(), 1, 1),
@@ -145,100 +163,99 @@ public class DashboardController implements Serializable {
 	}
 
 	public void createStackedBarModel(Employee employee) {
-		
-		 List<Object[]> lateCount = musterService.countAllLateDaysByEmployeeId(employee.getEmployeeId(), 2019)
-					.get();// LocalDate.now().getYear()).get();
-		 
-		 List<Object[]> earlyCount = musterService.countAllEarlyDaysByEmployeeId(employee.getEmployeeId(), 2019)
-					.get();// LocalDate.now().getYear()).get();
-		 
-		 List<Object[]> extraCount = musterService.countAllExtraDaysByEmployeeId(employee.getEmployeeId(), 2019)
-					.get();// LocalDate.now().getYear()).get();
-		
-        stackedBarModel = new BarChartModel();
-        ChartData data = new ChartData();
 
-        BarChartDataSet barDataSet = new BarChartDataSet();
-        barDataSet.setLabel("Late 1");
-        barDataSet.setBackgroundColor("rgb(255, 99, 132)");
-        List<Number> dataVal = new ArrayList<>();
-        lateCount.forEach(count -> {
-        	dataVal.add((Number) count[0]);			
-		});	     
-       
-        barDataSet.setData(dataVal);
+		List<Object[]> lateCount = musterService.countAllLateDaysByEmployeeId(employee.getEmployeeId(), 2019).get();// LocalDate.now().getYear()).get();
 
-        BarChartDataSet barDataSet2 = new BarChartDataSet();
-        barDataSet2.setLabel("Early 2");
-        barDataSet2.setBackgroundColor("rgb(54, 162, 235)");
-        List<Number> dataVal2 = new ArrayList<>();
-        earlyCount.forEach(count -> {
-        	dataVal2.add((Number) count[0]);			
-		});	   
-       
-        barDataSet2.setData(dataVal2);
+		List<Object[]> earlyCount = musterService.countAllEarlyDaysByEmployeeId(employee.getEmployeeId(), 2019).get();// LocalDate.now().getYear()).get();
 
-        BarChartDataSet barDataSet3 = new BarChartDataSet();
-        barDataSet3.setLabel("Extra 3");
-        barDataSet3.setBackgroundColor("rgb(75, 192, 192)");
-        List<Number> dataVal3 = new ArrayList<>();
-        extraCount.forEach(count -> {
-        	dataVal3.add((Number) count[0]);			
-		});	   
-       
-        barDataSet3.setData(dataVal3);
+		List<Object[]> extraCount = musterService.countAllExtraDaysByEmployeeId(employee.getEmployeeId(), 2019).get();// LocalDate.now().getYear()).get();
 
-        data.addChartDataSet(barDataSet);
-        data.addChartDataSet(barDataSet2);
-        data.addChartDataSet(barDataSet3);
+		stackedBarModel = new BarChartModel();
+		ChartData data = new ChartData();
 
-        List<String> labels = new ArrayList<>();
-        labels.add("January");
-        labels.add("February");
-        labels.add("March");
-        labels.add("April");
-        labels.add("May");
-        labels.add("June");
-        labels.add("August");
-        labels.add("September");
-        labels.add("October");
-        labels.add("November");
-        labels.add("December");
-        data.setLabels(labels);
-        stackedBarModel.setData(data);
+		BarChartDataSet barDataSet = new BarChartDataSet();
+		barDataSet.setLabel("Canceled 1");
+		barDataSet.setBackgroundColor("rgb(255, 99, 132)");
+		List<Number> dataVal = new ArrayList<>();
+		lateCount.forEach(count -> {
+			dataVal.add((Number) count[0]);
+		});
 
-        //Options
-        BarChartOptions options = new BarChartOptions();
-        options.setMaintainAspectRatio(false);
-        CartesianScales cScales = new CartesianScales();
-        CartesianLinearAxes linearAxes = new CartesianLinearAxes();
-        linearAxes.setStacked(true);
-        linearAxes.setOffset(true);
-        cScales.addXAxesData(linearAxes);
-        cScales.addYAxesData(linearAxes);
-        options.setScales(cScales);
+		barDataSet.setData(dataVal);
 
-        Title title = new Title();
-        title.setDisplay(true);
-        title.setText("Bar Chart - Late,Early & Extra");
-        options.setTitle(title);
+		BarChartDataSet barDataSet2 = new BarChartDataSet();
+		barDataSet2.setLabel("Re-Scheduled 2");
+		barDataSet2.setBackgroundColor("rgb(54, 162, 235)");
+		List<Number> dataVal2 = new ArrayList<>();
+		earlyCount.forEach(count -> {
+			dataVal2.add((Number) count[0]);
+		});
 
-        Tooltip tooltip = new Tooltip();
-        tooltip.setMode("index");
-        tooltip.setIntersect(false);
-        options.setTooltip(tooltip);
+		barDataSet2.setData(dataVal2);
 
-        stackedBarModel.setOptions(options);
-    }
-	
+		BarChartDataSet barDataSet3 = new BarChartDataSet();
+		barDataSet3.setLabel("Completed 3");
+		barDataSet3.setBackgroundColor("rgb(75, 192, 192)");
+		List<Number> dataVal3 = new ArrayList<>();
+		extraCount.forEach(count -> {
+			dataVal3.add((Number) count[0]);
+		});
+
+		barDataSet3.setData(dataVal3);
+
+		data.addChartDataSet(barDataSet);
+		data.addChartDataSet(barDataSet2);
+		data.addChartDataSet(barDataSet3);
+
+		List<String> labels = new ArrayList<>();
+		labels.add("January");
+		labels.add("February");
+		labels.add("March");
+		labels.add("April");
+		labels.add("May");
+		labels.add("June");
+		labels.add("August");
+		labels.add("September");
+		labels.add("October");
+		labels.add("November");
+		labels.add("December");
+		data.setLabels(labels);
+		stackedBarModel.setData(data);
+
+		// Options
+		BarChartOptions options = new BarChartOptions();
+		options.setMaintainAspectRatio(false);
+		CartesianScales cScales = new CartesianScales();
+		CartesianLinearAxes linearAxes = new CartesianLinearAxes();
+		linearAxes.setStacked(true);
+		linearAxes.setOffset(true);
+		cScales.addXAxesData(linearAxes);
+		cScales.addYAxesData(linearAxes);
+		options.setScales(cScales);
+
+		Title title = new Title();
+		title.setDisplay(true);
+		title.setText("Canceled,Pending Approval & Completed");
+		options.setTitle(title);
+
+		Tooltip tooltip = new Tooltip();
+		tooltip.setMode("index");
+		tooltip.setIntersect(false);
+		options.setTooltip(tooltip);
+
+		stackedBarModel.setOptions(options);
+	}
+
 	private void getTodaysCount() {
-		musters = musterService.findByAttendanceDateBetween(LocalDate.now(), LocalDate.now()).get();
-		presentCount = musters.stream().filter(attId -> !attId.getAttendanceId().equals("AA")
-				&& !attId.getAttendanceId().equals("HH") && !attId.getAttendanceId().equals("WW"))
-				.collect(Collectors.toList()).size();
-		absentCount = employees.size() - presentCount;
-		lateCount = musters.stream().filter(late -> late.getLatePunch() > '0').collect(Collectors.toList()).size();
-		earlyCount = musters.stream().filter(early -> early.getEarlyOut() > '0').collect(Collectors.toList()).size();
+		//musters = musterService.findByAttendanceDateBetween(LocalDate.now(), LocalDate.now()).get();
+		presentCount = 10;/*
+						 * musters.stream().filter(attId -> !attId.getAttendanceId().equals("AA") &&
+						 * !attId.getAttendanceId().equals("HH") &&
+						 * !attId.getAttendanceId().equals("WW")) .collect(Collectors.toList()).size();
+						 */
+		absentCount = 2;//employees.size() - presentCount;
+		lateCount = 0;//musters.stream().filter(late -> late.getLatePunch() > '0').collect(Collectors.toList()).size();
+		earlyCount = 6;//musters.stream().filter(early -> early.getEarlyOut() > '0').collect(Collectors.toList()).size();
 
 		donutModel = new DonutChartModel();
 		ChartData data = new ChartData();
@@ -271,49 +288,57 @@ public class DashboardController implements Serializable {
 
 		donutModel.setData(data);
 	}
-	
-	   public void leaveCountLineModel(Employee employee) {
-		   
-		   List<Object[]> leaveCount = musterService.countAllLeaveDaysByEmployeeId(employee.getEmployeeId(), 2019)
-					.get();// LocalDate.now().getYear()).get();
-		   
-	        lineModel = new LineChartModel();
-	        ChartData data = new ChartData();
 
-	        LineChartDataSet dataSet = new LineChartDataSet();
-	        List<Object> values = new ArrayList<>();
-	        List<String> labels = new ArrayList<>();
-	        
-	        leaveCount.forEach(count -> {
-				values.add((Number) count[0]);
-				labels.add(months[(int) count[1]-1]);
-			});	        
-	       
-	        dataSet.setData(values);
-	        dataSet.setFill(false);
-	        dataSet.setLabel("My Leaves Dataset");
-	        dataSet.setBorderColor("rgb(75, 192, 192)");
-	        dataSet.setTension(0.1);
-	        data.addChartDataSet(dataSet);
-	      
-	        data.setLabels(labels);
+	public void leaveCountLineModel(Employee employee) {
 
-	        //Options
-	        LineChartOptions options = new LineChartOptions();
-	        options.setMaintainAspectRatio(false);
-	        Title title = new Title();
-	        title.setDisplay(true);
-	        title.setText("Leave Chart");
-	        options.setTitle(title);
+		//List<Object[]> leaveCount = musterService.countAllLeaveDaysByEmployeeId(employee.getEmployeeId(), 2019).get();// LocalDate.now().getYear()).get();
 
-	        Title subtitle = new Title();
-	        subtitle.setDisplay(true);
-	        subtitle.setText("Monthly Leave Availed");
-	        options.setSubtitle(subtitle);
+		lineModel = new LineChartModel();
+		ChartData data = new ChartData();
 
-	        lineModel.setOptions(options);
-	        lineModel.setData(data);
-	    }
+		LineChartDataSet dataSet = new LineChartDataSet();
+		List<Object> values = new ArrayList<>();
+		List<String> labels = new ArrayList<>();
+		/*
+		 * leaveCount.forEach(count -> { values.add((Number) count[0]);
+		 * labels.add(months[(int) count[1] - 1]); });
+		 */
+		
+		int z =3;
+		for(int y=0;y<6;y++)
+		{
+        	 int x = random.nextInt(5) + 1;
+        	 values.add((Number)x);
+        	 
+ 			labels.add(months[(int) z++]);
+         }
+		
+		
+		dataSet.setData(values);
+		dataSet.setFill(false);
+		dataSet.setLabel("Future Events count");
+		dataSet.setBorderColor("rgb(75, 192, 192)");
+		dataSet.setTension(0.1);
+		data.addChartDataSet(dataSet);
+
+		data.setLabels(labels);
+
+		// Options
+		LineChartOptions options = new LineChartOptions();
+		options.setMaintainAspectRatio(false);
+		Title title = new Title();
+		title.setDisplay(true);
+		title.setText("Future Events Chart");
+		options.setTitle(title);
+
+		Title subtitle = new Title();
+		subtitle.setDisplay(true);
+		subtitle.setText("Monthly Leave Availed");
+		options.setSubtitle(subtitle);
+
+		lineModel.setOptions(options);
+		lineModel.setData(data);
+	}
 
 	protected void presentCountBarModel(Employee employee) {
 		List<Object[]> presentCount = musterService.countAllPresentDaysByEmployeeId(employee.getEmployeeId(), 2019)
@@ -323,13 +348,13 @@ public class DashboardController implements Serializable {
 		ChartData data = new ChartData();
 
 		BarChartDataSet barDataSet = new BarChartDataSet();
-		barDataSet.setLabel("My Attendance Dataset");
+		barDataSet.setLabel("My Events Attendance Dataset");
 
 		List<Number> values = new ArrayList<>();
 		List<String> labels = new ArrayList<>();
 		presentCount.forEach(count -> {
 			values.add((Number) count[0]);
-			labels.add(months[(int) count[1]-1]);
+			labels.add(months[(int) count[1] - 1]);
 		});
 
 		barDataSet.setData(values);
@@ -373,7 +398,7 @@ public class DashboardController implements Serializable {
 
 		Title title = new Title();
 		title.setDisplay(true);
-		title.setText("Bar Chart");
+		title.setText("");
 		options.setTitle(title);
 
 		Legend legend = new Legend();

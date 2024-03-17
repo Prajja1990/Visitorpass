@@ -1,0 +1,160 @@
+<ui:composition
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:h="http://xmlns.jcp.org/jsf/html"
+  xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  template="/WEB-INF/template.xhtml"
+>
+  <ui:define name="title">
+    Schedule <span class="subitem"> Events Approval</span>
+  </ui:define>
+
+  <ui:define name="description">
+    Tool provides an Outlook for endusers who is pertinant to operate the
+    Schedule events Approval request process.
+  </ui:define>
+
+  <ui:param name="documentationLink" value="/components/schedule" />
+  <ui:param name="widgetLink" value="Schedule-1" />
+
+  <ui:define name="implementation">
+    <h:form id="form">
+      <p:growl id="messages" showDetail="true" />
+
+      <div class="card crud-demo">
+        <h5>Scheduled Events Details</h5>
+        <p:toolbar>
+          <p:toolbarGroup>             
+              <p:commandButton id="delete-products-button" value="#{mastersController.deleteScheduleEventsButtonMessage}"
+                  icon="pi pi-trash" actionListener="#{mastersController.deleteScheduleEvents}"
+                  styleClass="ui-button-danger" disabled="#{!mastersController.hasSelectedScheduleEvents()}" update="@this">
+                  <p:confirm header="Confirmation" message="Delete the selected events?"
+                      icon="pi pi-exclamation-triangle" />
+              </p:commandButton>
+          </p:toolbarGroup>
+          <p:toolbarGroup align="right">
+              <p:fileUpload mode="simple" skinSimple="true" label="Import" chooseIcon="pi pi-download" />
+              <p:commandButton value="Export" icon="pi pi-upload" styleClass="ui-button-help" ajax="false">
+                  <p:dataExporter type="pdf" target="dt-products" fileName="products" />
+              </p:commandButton>
+          </p:toolbarGroup>
+      </p:toolbar>
+
+      <p:dataTable id="dt-products" widgetVar="dtProducts" var="product" value="#{mastersController.approvalEvents}"
+          reflow="true" styleClass="products-table" selection="#{mastersController.selectedScheduleEvents}"
+          rowKey="#{product.id}" paginator="true" rows="10" rowSelectMode="add" paginatorPosition="bottom">
+          <f:facet name="header">
+              <div class="products-table-header">
+                  <span style="font-weight: bold">Sehedule Events</span>
+                  <span class="filter-container ui-input-icon-left"> <i class="pi pi-search"></i>
+                      <p:inputText id="globalFilter" onkeyup="PF('dtProducts').filter()" placeholder="Search" />
+                  </span>
+              </div>
+          </f:facet>
+
+          <p:ajax event="rowSelect" update=":form:delete-products-button" />
+          <p:ajax event="rowUnselect" update=":form:delete-products-button" />
+          <p:ajax event="rowSelectCheckbox" update=":form:delete-products-button" />
+          <p:ajax event="rowUnselectCheckbox" update=":form:delete-products-button" />
+          <p:ajax event="toggleSelect" update=":form:delete-products-button" />
+
+          <p:column selectionMode="multiple" exportable="false"></p:column>
+
+          <p:column headerText="Code" sortBy="#{product.id}" filterBy="#{product.id}">
+              <h:outputText value="#{product.id}" />
+          </p:column>
+          
+          <p:column headerText="EventTitle" sortBy="#{product.eventTitle}" filterBy="#{product.eventTitle}">
+              <h:outputText value="#{product.eventTitle}" />
+          </p:column>
+
+          <p:column headerText="Event start" sortBy="#{product.from}" filterBy="#{product.from}">
+            <h:outputText value="#{product.fromDate}" />
+        </p:column>
+
+        <p:column headerText="Event End" sortBy="#{product.to}" filterBy="#{product.to}">
+            <h:outputText value="#{product.toDate}" />
+        </p:column>
+        <p:column headerText="Event location" sortBy="#{product.location}" filterBy="#{product.location}">
+            <h:outputText value="#{product.location}" />
+        </p:column>
+
+        <p:column headerText="Event eventType" sortBy="#{product.eventType}" filterBy="#{product.eventType}">
+            <h:outputText value="#{product.eventType}" />
+        </p:column>
+
+        <p:column headerText="Event Status" sortBy="#{product.eventStatus}" filterBy="#{product.eventStatus}">
+            <h:outputText value="#{product.eventStatus}" />
+        </p:column>
+                           
+          <p:column exportable="false">
+              <p:commandButton icon="pi pi-pencil" update=":dialogs:manage-product-content"
+                  oncomplete="PF('manageProductDialog').show()"
+                  styleClass="edit-button rounded-button ui-button-success" process="@this">
+                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedScheduleEvent}" />
+                  <p:resetInput target=":dialogs:manage-product-content" />
+              </p:commandButton>
+              <p:commandButton class="ui-button-warning rounded-button" icon="pi pi-trash"
+                               process="@this"
+                               oncomplete="PF('deleteProductDialog').show()">
+                  <f:setPropertyActionListener value="#{product}" target="#{mastersController.selectedScheduleEvent}" />
+              </p:commandButton>
+          </p:column>
+
+      </p:dataTable>
+    </div>
+  </h:form>
+
+  <h:form id="dialogs">
+      <p:dialog header="Event Details" showEffect="fade" modal="true" widgetVar="manageProductDialog"
+          responsive="true">
+          <p:outputPanel id="manage-product-content" class="ui-fluid">
+              <p:outputPanel rendered="#{not empty mastersController.selectedScheduleEvent}">
+            
+              <div class="field">
+                <p:outputLabel for="eventTitle">Event Title</p:outputLabel>
+                <p:inputText id="eventTitle" value="#{mastersController.selectedScheduleEvent.eventTitle}" required="true" />
+             </div>      
+
+             <div class="field">
+                <p:outputLabel for="eventHeadCount">Event Head Count</p:outputLabel>
+                <p:inputText id="eventHeadCount" value="#{mastersController.selectedScheduleEvent.eventHeadCount}" required="true" />
+             </div>      
+             <div class="field">
+                <p:outputLabel for="comments">Comments</p:outputLabel>
+                <p:inputTextarea rows="5" cols="30" id="comments" value="#{mastersController.selectedScheduleEvent.rejectionComments}" required="true" />
+             </div>                      
+                  
+              </p:outputPanel>
+          </p:outputPanel>
+
+          <f:facet name="footer"> 
+              <p:commandButton value="Approve" icon="pi pi-check" actionListener="#{mastersController.approvedScheduleEvent}"
+                  update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+            <p:commandButton value="Reject" icon="pi pi-stop-circle" actionListener="#{mastersController.rejectScheduleEvent}"
+            styleClass="ui-button-danger" update="manage-product-content,:form:messages,:form:dt-products" process="manage-product-content @this" />
+            <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageProductDialog').hide()"
+                  class="ui-button-secondary" type="button" />
+          </f:facet>
+      </p:dialog>
+
+      <p:confirmDialog widgetVar="deleteProductDialog" showEffect="fade" width="300"
+          message="Delete the event?" header="Confirm" severity="warn">
+          <p:commandButton value="Yes" icon="pi pi-check" actionListener="#{mastersController.deleteScheduleEvent}"
+              process="@this" update=":form:delete-products-button"
+              oncomplete="PF('deleteProductDialog').hide()" />
+          <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"
+              onclick="PF('deleteProductDialog').hide()" />
+      </p:confirmDialog>
+
+      <p:confirmDialog global="true" showEffect="fade" width="300">
+          <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+          <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"
+              icon="pi pi-times" />
+      </p:confirmDialog>      
+  
+    </h:form>
+ 
+  </ui:define>
+</ui:composition>

@@ -24,12 +24,17 @@ import org.primefaces.model.ScheduleModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.Muster;
+import com.inops.visitorpass.entity.RegisteredEvents;
 import com.inops.visitorpass.entity.Transaction;
 import com.inops.visitorpass.entity.TransactionId;
+import com.inops.visitorpass.entity.User;
+import com.inops.visitorpass.repository.ScheduleEventRepository;
 import com.inops.visitorpass.service.IDailyTransaction;
 import com.inops.visitorpass.service.IMuster;
 
@@ -50,8 +55,10 @@ public class PunchController {
 	ApplicationContext ctx;
 	private final IDailyTransaction dailyTransactionService;
 	private final IMuster musterService;
+	private final ScheduleEventRepository scheduleEventRepository;
 
 	private List<Transaction> transactions;
+	private List<com.inops.visitorpass.entity.ScheduleEvent> scheduleEvents, approvalEvents, registeredEvents;
 
 	private Transaction transaction;
 	private String employeeId;
@@ -74,6 +81,7 @@ public class PunchController {
 	private boolean tooltip = true;
 	private boolean allDaySlot = true;
 	private boolean rtl = false;
+	private User user;
 
 	ZoneId defaultZoneId = ZoneId.systemDefault();
 	private double aspectRatio = Double.MIN_VALUE;
@@ -82,6 +90,15 @@ public class PunchController {
 
 	@PostConstruct
 	public void init() {
+
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		user = (User) auth.getPrincipal();
+		
+		registeredEvents = scheduleEventRepository.findAllByEventStatus("Published");
+				/*.stream().filter(
+				event -> event.getRegistered().stream().anyMatch(usr -> usr.getUserId().equals(user.getEmail())))
+				.collect(Collectors.toList());*/
+		
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
 		List<Employee> dateOfBirths = employees.stream()
 				.filter(emp -> (emp.getDateOfBirth().getDayOfMonth() == LocalDate.now().getDayOfMonth())
@@ -90,14 +107,28 @@ public class PunchController {
 
 		eventModel = new DefaultScheduleModel();
 
-		DefaultScheduleEvent<?> scheduleEventAllDay = DefaultScheduleEvent.builder()
-				.title("Birthday's (AllDay) "
-						+ dateOfBirths.stream().map(Employee::getEmployeeName).collect(Collectors.toList()))
-				.startDate(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0))
-				.endDate(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)).description("")
-				.backgroundColor("green").borderColor("#27AE60").allDay(true).build();
-		eventModel.addEvent(scheduleEventAllDay);
-
+		/*
+		 * DefaultScheduleEvent<?> scheduleEventAllDay = DefaultScheduleEvent.builder()
+		 * .title("Birthday's (AllDay) " +
+		 * dateOfBirths.stream().map(Employee::getEmployeeName).collect(Collectors.
+		 * toList()))
+		 * .startDate(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).
+		 * withNano(0))
+		 * .endDate(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano
+		 * (0)).description("")
+		 * .backgroundColor("green").borderColor("#27AE60").allDay(true).build();
+		 * eventModel.addEvent(scheduleEventAllDay);
+		 */
+         registeredEvents.forEach(events->{
+			
+			DefaultScheduleEvent<?> event = DefaultScheduleEvent.builder().data(events).id(events.getId().toString())
+					.title("Event Titel : " + events.getEventTitle() + "& Location : " + events.getLocation())
+					.startDate((LocalDateTime) events.getFromDate()).endDate((LocalDateTime) events.getToDate())
+					.description(events.getBody() )
+					.borderColor("orange").build();
+			eventModel.addEvent(event);
+			
+		});
 	}
 
 	public void openNew() {
@@ -106,67 +137,58 @@ public class PunchController {
 
 	public void searchPunchs() {
 		eventModel = new DefaultScheduleModel();
-		List<Object[]> transactions = dailyTransactionService
-				.findMinMaxPunchedTimeByDateRange(employeeId, startDate, endDate).get();
-		List<Muster> musters = musterService.findAllByAttendanceDateBetweenAndEmployeeId(startDate, endDate, employeeId)
-				.get();
-		transactions.stream().forEach(trans -> {
-			Muster muster = musters.stream().filter(must -> must.getMusterId().getAttendanceDate().equals(trans[0]))
-					.findAny().orElse(null);
-			if (muster != null) {
-				float hours = (muster.getHoursWorked() / 60);
-				String colour = hours >= 8 ? "green" : hours >= 4 && hours <= 6 ? "orange" : "red";
-				DefaultScheduleEvent<?> event = DefaultScheduleEvent.builder()
-						.title("Attendance : " + muster.getAttendanceId() + "& Hours Worked : " + hours)
-						.startDate((LocalDateTime) trans[1]).endDate((LocalDateTime) trans[2])
-						.description("Employee " + employeeId + " Hours Worked " + muster.getHoursWorked())
-						.borderColor(colour).build();
-				eventModel.addEvent(event);
-			}
+		/*
+		 * List<Object[]> transactions = dailyTransactionService
+		 * .findMinMaxPunchedTimeByDateRange(employeeId, startDate, endDate).get();
+		 * List<Muster> musters =
+		 * musterService.findAllByAttendanceDateBetweenAndEmployeeId(startDate, endDate,
+		 * employeeId) .get(); transactions.stream().forEach(trans -> { Muster muster =
+		 * musters.stream().filter(must ->
+		 * must.getMusterId().getAttendanceDate().equals(trans[0]))
+		 * .findAny().orElse(null); if (muster != null) { float hours =
+		 * (muster.getHoursWorked() / 60); String colour = hours >= 8 ? "green" : hours
+		 * >= 4 && hours <= 6 ? "orange" : "red"; DefaultScheduleEvent<?> event =
+		 * DefaultScheduleEvent.builder() .title("Attendance : " +
+		 * muster.getAttendanceId() + "& Hours Worked : " + hours)
+		 * .startDate((LocalDateTime) trans[1]).endDate((LocalDateTime) trans[2])
+		 * .description("Employee " + employeeId + " Hours Worked " +
+		 * muster.getHoursWorked()) .borderColor(colour).build();
+		 * eventModel.addEvent(event); } });
+		 */
+		registeredEvents.forEach(events->{
+			
+			DefaultScheduleEvent<?> event = DefaultScheduleEvent.builder().data(events).id(events.getId().toString())
+					.title("Event Titel : " + events.getEventTitle() + "& Location : " + events.getLocation())
+					.startDate((LocalDateTime) events.getFromDate()).endDate((LocalDateTime) events.getToDate())
+					.description(events.getBody() )
+					.borderColor("orange").build();
+			eventModel.addEvent(event);
+			
 		});
+		
 
 		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Punch searched successfully for: " + employeeId);
 
 	}
 
 	public void addEvent() {
-		if (employeeId == null) {
-			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message",
-					"exception at the time of punch addition, Please selesct employeeId  ");
-		} else {
-			if (event.isAllDay()) {
-				// see https://github.com/primefaces/primefaces/issues/1164
-				if (event.getStartDate().toLocalDate().equals(event.getEndDate().toLocalDate())) {
-					event.setEndDate(event.getEndDate().plusDays(1));
-				}
-			}
+		/*
+		 * if (employeeId == null) { addMessage(FacesMessage.SEVERITY_ERROR,
+		 * "Error Message",
+		 * "exception at the time of punch addition, Please selesct employeeId  "); }
+		 * else { if (event.isAllDay()) { // see
+		 * https://github.com/primefaces/primefaces/issues/1164 if
+		 * (event.getStartDate().toLocalDate().equals(event.getEndDate().toLocalDate()))
+		 * { event.setEndDate(event.getEndDate().plusDays(1)); } }
+		 */
+		com.inops.visitorpass.entity.ScheduleEvent selectedScheduleEvent = (com.inops.visitorpass.entity.ScheduleEvent) event.getData();
+		selectedScheduleEvent.getRegistered().add(new RegisteredEvents(null, user.getEmail(), user.getUsername(), selectedScheduleEvent));
+		scheduleEventRepository.save(selectedScheduleEvent);
 
-			if (event.getId() == null) {
-				eventModel.addEvent(event);
-			} else {
-				eventModel.updateEvent(event);
-			}
-
-			Date attendanceDate = Date
-					.from(event.getStartDate().with(LocalTime.MIN).atZone(ZoneId.systemDefault()).toInstant());
-
-			Transaction transaction = new Transaction(new TransactionId(employeeId, event.getStartDate(), "I"), "I",
-					"P", null, attendanceDate, 0, "Miss Punch Approved", 0, "F", null, null);
-			dailyTransactionService.save(transaction);
-
-			if (event.getEndDate().isAfter(event.getStartDate())) {
-				attendanceDate = Date
-						.from(event.getEndDate().with(LocalTime.MIN).atZone(ZoneId.systemDefault()).toInstant());
-
-				transaction.getTransactionId().setTransactionTime(event.getEndDate());
-				transaction.getTransactionId().setInputOutputFlag("O");
-				transaction.setAttendanceDate(attendanceDate);
-				transaction.setActualIOFlag("O");
-				dailyTransactionService.save(transaction);
-			}
+		
 			event = new DefaultScheduleEvent<>();
-			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Punch added successfully for: " + employeeId);
-		}
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event downloaded successfully for: " + selectedScheduleEvent.getEventTitle());
+		
 	}
 
 	public void onDateSelect(SelectEvent<LocalDateTime> selectEvent) {

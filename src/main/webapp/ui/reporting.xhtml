@@ -100,7 +100,7 @@
                                 <h:outputText value="Selection Type: " />
                                 <p:selectOneRadio id="selectionType" value="#{reportController.report.selectionType}"
                                     required="true">
-                                    <f:selectItem itemLabel="Caders" itemValue="Caders" />
+                                   <!-- <f:selectItem itemLabel="Caders" itemValue="Caders" />-->
                                     <f:selectItem itemLabel="Departments" itemValue="Departments" />
                                     <f:selectItem itemLabel="Employees" itemValue="Employees" />
                                     <p:ajax listener="#{reportController.setComp}" update="selectedPickList"

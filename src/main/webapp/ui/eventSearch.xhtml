@@ -1,0 +1,93 @@
+<ui:composition
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:h="http://xmlns.jcp.org/jsf/html"
+  xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  template="/WEB-INF/template.xhtml"
+>
+  <ui:define name="title">
+    Schedule <span class="subitem"> Events Search</span>
+  </ui:define>
+
+  <ui:define name="description">
+    Tool provides an Outlook for endusers who is pertinant to operate the
+    Schedule events search request process.
+  </ui:define>
+
+  <ui:param name="documentationLink" value="/components/schedule" />
+  <ui:param name="widgetLink" value="Schedule-1" />
+
+  <ui:define name="implementation">
+     
+  <div class="card product">
+    <h:form id="form">
+        <p:dataView var="product" value="#{mastersController.approvedEvents}" rows="12" paginator="true"
+                    rowsPerPageTemplate="6,12,16"
+                    paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                    gridIcon="pi pi-th-large" listIcon="pi pi-bars">
+
+            <p:dataViewGridItem>
+                <div class="product-grid-item card border-1">
+                    <div class="product-grid-item-top">
+                        <div>
+                            <i class="pi pi-tag product-category-icon"/>
+                            <span class="product-category">#{product.openClosed}</span>
+                        </div>
+                        <span class="product-badge status-#{product.eventStatus.toLowerCase()}">#{product.eventStatus}</span>
+                    </div>
+                    <div class="product-grid-item-content">
+                        
+                        <div class="product-name">#{product.eventTitle}</div>
+                        <div class="product-description">#{product.body}</div>
+                        <p:rating readonly="true" value="#{product.rating}"/>
+                    </div>
+                    <div class="product-grid-item-bottom">
+                        <h:outputText value="#{product.fromDate} to #{product.toDate} " styleClass="product-price">
+                           
+                        </h:outputText>
+                       
+                        <p:commandButton type="button" value="Register" icon="pi pi-shopping-cart"
+                        onclick="PF('cartDialog').show();" />                                           
+                        
+                    </div>
+                </div>
+            </p:dataViewGridItem>
+
+            <p:dataViewListItem>
+                <div class="product-list-item">
+                    
+                    <div class="product-list-detail">
+                        <div class="product-name">#{product.eventTitle}</div>
+                        <div class="product-description">#{product.body}</div>
+                        <p:rating readonly="true" value="#{product.rating}"/>
+                        <i class="pi pi-tag product-category-icon"/><span
+                            class="product-category">#{product.openClosed}</span>
+                    </div>
+                    <div class="product-list-action">
+                        <h:outputText value="#{product.fromDate}  to #{product.toDate}" styleClass="product-price">
+                           
+                        </h:outputText>
+                        <p:commandButton type="button"
+                                         value="Register"
+                                         icon="pi pi-shopping-cart" 
+                                         onclick="PF('cartDialog').show();"
+                                        >
+                                   
+                        </p:commandButton>
+                       <span class="product-badge status-#{product.eventStatus.toLowerCase()}">#{product.eventStatus}</span>
+                    </div>
+                </div>
+            </p:dataViewListItem>
+        </p:dataView>
+        <p:dialog header="Add To Cart" widgetVar="cartDialog" modal="true" showEffect="fade" hideEffect="fade">
+    <!-- Content of your dialog goes here -->
+    <!-- For example, you can display a confirmation message or additional information -->
+    <h:outputText value=" Registered successfully" />
+    
+</p:dialog>
+    </h:form>
+</div>
+
+  </ui:define>
+</ui:composition>

@@ -13,12 +13,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Punch {
 	
-	private String name;
-	private String department;
-	private String employeeId;
-	private Date attendanceDate;
-	private Date transactionTime;
-	private String ioMode;
+	private String eventTitel;
+	private String openClosed;
+	private String eventStatus;
+	private Date eventStart;
+	private Date eventEnd;
+	private String comments;
 	
 
 }

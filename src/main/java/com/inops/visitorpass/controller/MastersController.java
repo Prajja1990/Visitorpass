@@ -1,21 +1,25 @@
 package com.inops.visitorpass.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
-import javax.faces.model.SelectItem;
 
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.TransferEvent;
 import org.primefaces.model.DualListModel;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.inops.visitorpass.domain.Kvp;
@@ -29,7 +33,11 @@ import com.inops.visitorpass.entity.EmailTemplateAssociation;
 import com.inops.visitorpass.entity.Employee;
 import com.inops.visitorpass.entity.Integration;
 import com.inops.visitorpass.entity.IntegrationDatabase;
+import com.inops.visitorpass.entity.RegisteredEvents;
+import com.inops.visitorpass.entity.ScheduleEvent;
 import com.inops.visitorpass.entity.Shift;
+import com.inops.visitorpass.entity.User;
+import com.inops.visitorpass.repository.ScheduleEventRepository;
 import com.inops.visitorpass.service.ICadre;
 import com.inops.visitorpass.service.IDepartment;
 import com.inops.visitorpass.service.IDesignation;
@@ -65,6 +73,7 @@ public class MastersController {
 	private final IEmailTemplate emailTemplateService;
 	private final IIntegrationService integrationService;
 	private final IIntegrationDatabaseService integrationDatabaseService;
+	private final ScheduleEventRepository scheduleEventRepository;
 
 	private Division selectedDivision;
 	private List<Division> selectedDivisions;
@@ -73,6 +82,11 @@ public class MastersController {
 	private Department selectedDepartment;
 	private List<Department> selectedDepartments;
 	private List<Department> departments;
+
+	private ScheduleEvent selectedScheduleEvent;
+	private List<ScheduleEvent> selectedScheduleEvents;
+	private List<ScheduleEvent> scheduleEvents, approvalEvents, approvedEvents,feedback;
+	private Set<String> people;
 
 	private Designation selectedDesignation;
 	private List<Designation> selectedDesignations;
@@ -107,8 +121,24 @@ public class MastersController {
 	private List<IntegrationDatabase> selectedIntegrationDatabases;
 	private List<IntegrationDatabase> integrationDatabases;
 
+	private User user;
+	Random random = new Random();
+
 	@PostConstruct
 	public void init() {
+
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		user = (User) auth.getPrincipal();
+
+		approvedEvents = scheduleEventRepository.findAllByEventStatus("Published");
+		approvalEvents = scheduleEventRepository.findAllByEventStatus("Initeated");
+		
+		feedback = scheduleEventRepository
+				.findAllByEventStatusAndFromDateLessThan("Published", LocalDateTime.now())		
+		  .stream() .filter(event -> event.getRegistered().stream() .anyMatch(reg ->
+		  reg.getUserId().equals(user.getEmail()))) .collect(Collectors.toList());
+
+		scheduleEvents = scheduleEventRepository.findAllByUserId(user.getEmail());
 
 		divisions = division.findAll().get();
 		departments = departmentService.findAll().get();
@@ -116,6 +146,7 @@ public class MastersController {
 		cadres = cadreService.findAll().get();
 		shifts = shiftService.findAll().get();
 		employees = ((Optional<List<Employee>>) ctx.getBean("getEmployees")).get();
+		people = employees.stream().distinct().map(Employee::getEmail).collect(Collectors.toSet());
 		if (!emailService.findAll().get().isEmpty())
 			selectedEmail = emailService.findAll().get().get(0);
 
@@ -129,7 +160,7 @@ public class MastersController {
 		List<Kvp> pickSource = new ArrayList<>();
 		List<Kvp> pickTarget = new ArrayList<>();
 		pickSelectedTypes = new DualListModel<>(pickSource, pickTarget);
-		
+
 		integrations = integrationService.findAll().get();
 
 	}
@@ -143,6 +174,7 @@ public class MastersController {
 		this.selectedEmployee = new Employee();
 		this.selectedEmailTemplate = new EmailTemplate();
 		this.selectedIntegration = new Integration();
+		this.selectedScheduleEvent = new ScheduleEvent();
 	}
 
 	public void saveDivision() {
@@ -611,7 +643,7 @@ public class MastersController {
 
 	public void saveIntegration() {
 		try {
-			if (this.selectedIntegration.getId() == null) {				
+			if (this.selectedIntegration.getId() == null) {
 				integrationService.save(selectedIntegration);
 				this.integrations.add(selectedIntegration);
 				addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration Query Added successfully");
@@ -658,7 +690,7 @@ public class MastersController {
 	public boolean hasSelectedIntegrations() {
 		return this.selectedIntegrations != null && !this.selectedIntegrations.isEmpty();
 	}
-	
+
 	public void saveIntegrationDatabase() {
 		try {
 			if (this.selectedIntegrationDatabase.getId() == null) {
@@ -678,10 +710,140 @@ public class MastersController {
 	public void deleteIntegrationDatabase() {
 
 		integrationDatabaseService.delete(selectedIntegrationDatabase);
-		this.integrationDatabases.remove(this.selectedIntegrationDatabase);		
+		this.integrationDatabases.remove(this.selectedIntegrationDatabase);
 		this.selectedIntegration = null;
 		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
 		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Integration database deleted successfully");
+	}
+
+	public void saveScheduleEvent() {
+		try {
+
+			ScheduleEvent overlap = scheduleEvents.stream()
+					.filter(event -> event.getFromDate().isBefore(selectedScheduleEvent.getFromDate())
+							&& event.getToDate().isAfter(selectedScheduleEvent.getFromDate()) ||
+							event.getFromDate().isBefore(selectedScheduleEvent.getToDate())
+							&& event.getToDate().isAfter(selectedScheduleEvent.getToDate())
+							)
+					.findAny().orElse(null);
+
+			if (overlap != null) {
+				addMessage(FacesMessage.SEVERITY_ERROR, "The event is overlapping with ", overlap.getEventTitle());
+			} else {
+				
+				// Generate a random integer between 1 and 5 (inclusive)
+				int randomNumber = random.nextInt(5) + 1;
+
+				if (this.selectedScheduleEvent.getId() == null) {
+					selectedScheduleEvent.setPeople(String.join(",", selectedScheduleEvent.getSelectedPeople()));
+					selectedScheduleEvent.setEventStatus("Initeated");
+					selectedScheduleEvent.setUserId(user.getEmail());
+					selectedScheduleEvent.setRating(randomNumber);
+					scheduleEventRepository.save(selectedScheduleEvent);
+
+					this.scheduleEvents.add(selectedScheduleEvent);
+					addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event Added successfully");
+
+				} else {
+
+					scheduleEventRepository.save(selectedScheduleEvent);
+
+					addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event updated successfully");
+				}
+			}
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void rejectScheduleEvent() {
+		try {
+			selectedScheduleEvent.setEventStatus("Rejected");
+			scheduleEventRepository.save(selectedScheduleEvent);
+			approvalEvents.remove(selectedScheduleEvent);
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event Rejected successfully");
+
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void approvedScheduleEvent() {
+		try {
+
+			selectedScheduleEvent.setEventStatus("Approved & Ready for Publish");
+			scheduleEventRepository.save(selectedScheduleEvent);
+			approvalEvents.remove(selectedScheduleEvent);
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event Approved successfully");
+
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+	
+	public void publishScheduleEvent() {
+		try {
+			selectedScheduleEvents.forEach(events->{
+				events.setEventStatus("Published");
+				scheduleEventRepository.save(events);
+			});
+						
+			addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event Published successfully");
+			PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+			PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");
+
+		} catch (Exception e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Error Message", e.getMessage());
+		}
+	}
+
+	public void deleteScheduleEvent() {
+
+		scheduleEventRepository.delete(selectedScheduleEvent);
+		this.scheduleEvents.remove(this.selectedScheduleEvent);
+		if (this.selectedScheduleEvents != null) {
+			this.selectedScheduleEvents.remove(this.selectedScheduleEvent);
+		}
+		this.selectedScheduleEvent = null;
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Event deleted successfully");
+	}
+
+	public void deleteScheduleEvents() {
+		scheduleEventRepository.deleteAll(this.selectedScheduleEvents);
+		this.scheduleEvents.removeAll(this.selectedScheduleEvents);
+		this.selectedScheduleEvents = null;
+		addMessage(FacesMessage.SEVERITY_INFO, "Info Message", "Events deleted successfully");
+		PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");
+	}
+
+	public String getDeleteScheduleEventsButtonMessage() {
+		if (hasSelectedScheduleEvents()) {
+			int size = this.selectedScheduleEvents.size();
+			return size > 1 ? size + " Events selected" : "1 Event selected";
+		}
+
+		return "Delete";
+	}
+	
+	public String getPublishEventsButtonMessage() {
+		if (hasSelectedScheduleEvents()) {
+			int size = this.selectedScheduleEvents.size();
+			return size > 1 ? size + " Events selected" : "1 Event selected";
+		}
+
+		return "Publish";
+	}
+
+	public void setMeetingLink(AjaxBehaviorEvent event) {
+		selectedScheduleEvent.setBody("(" + selectedScheduleEvent.getEventTitle() + ")\r\n"
+				+ "Friday, 15 March · 03:30 – 04:30\r\n" + "Time zone: Asia/Kolkata\r\n"
+				+ "Google Meet joining info\r\n" + "Video call link: https://meet.google.com/mxe-stcb-akq");
+	}
+
+	public boolean hasSelectedScheduleEvents() {
+		return this.selectedScheduleEvents != null && !this.selectedScheduleEvents.isEmpty();
 	}
 
 	public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
@@ -689,4 +851,3 @@ public class MastersController {
 	}
 
 }
-
